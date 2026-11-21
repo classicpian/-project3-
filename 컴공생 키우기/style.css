@@ -1,0 +1,643 @@
+/* [1주차] 공통 디자인 */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #eee6da;
+    color: #202b43;
+    font-family: "맑은 고딕", sans-serif;
+}
+
+/* 화면 숨김은 다른 display 설정보다 우선 적용 */
+[hidden] {
+    display: none !important;
+}
+
+.screen {
+    min-height: 100vh;
+}
+
+.centered-screen {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+h1,
+h2,
+p {
+    margin-top: 0;
+}
+
+button {
+    padding: 14px 22px;
+    border: 3px solid #30354b;
+    border-radius: 8px;
+    background: #fff8ec;
+    color: #202b43;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+    button:hover:not(:disabled) {
+        background: #e2efdf;
+    }
+
+    button:focus-visible {
+        outline: 3px solid #397d65;
+        outline-offset: 4px;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+.primary-button {
+    background: #b3ebc5;
+}
+
+.panel {
+    padding: 20px;
+    border: 3px solid #30354b;
+    border-radius: 10px;
+    background: #fff8ec;
+}
+
+/* [1주차] 초기 화면 */
+.title-content {
+    text-align: center;
+}
+
+    .title-content h1 {
+        margin-bottom: 36px;
+        font-size: clamp(40px, 7vw, 76px);
+    }
+
+.subtitle {
+    color: #60706d;
+}
+
+/* [1주차] 시작 메뉴 */
+.menu-panel {
+    display: grid;
+    gap: 16px;
+    width: min(100%, 380px);
+    text-align: center;
+}
+
+/* [1주차] 기본 화면 */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 24px;
+    border-bottom: 3px solid #30354b;
+}
+
+    .game-header h1 {
+        margin: 0;
+        font-size: clamp(24px, 4vw, 40px);
+    }
+
+.game-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) 300px;
+    gap: 16px;
+    max-width: 1600px;
+    margin: auto;
+    padding: 20px;
+}
+
+.left-panel,
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.date-panel {
+    text-align: center;
+}
+
+    .date-panel h2 {
+        font-size: 22px;
+    }
+
+.month {
+    margin-bottom: 16px;
+    font-size: 64px;
+    font-weight: bold;
+}
+
+.week {
+    margin: 0;
+    padding: 8px;
+    border-radius: 6px;
+    background: #b3ebc5;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.calendar {
+    display: grid;
+    gap: 8px;
+}
+
+.calendar-week {
+    padding: 12px;
+    border: 1px solid #c5c6be;
+    text-align: center;
+}
+
+/* [2주차] 현재 주차에 붙일 표시 */
+.current-week {
+    background: #b3ebc5;
+    font-weight: bold;
+}
+
+.room-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 580px;
+    background: #d9d0c6;
+}
+
+.art-placeholder {
+    display: grid;
+    flex: 1;
+    place-content: center;
+    min-height: 300px;
+    color: #59616b;
+    line-height: 1.8;
+    text-align: center;
+}
+
+.dialogue-box {
+    padding: 20px;
+    border: 3px solid #30354b;
+    border-radius: 8px;
+    background: #fff8ec;
+}
+
+    .dialogue-box p {
+        margin: 10px 0 0;
+        line-height: 1.7;
+    }
+
+.stat {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 16px 0;
+    border-bottom: 1px solid #c5c6be;
+}
+
+    .stat:last-child {
+        border-bottom: 0;
+    }
+
+    .stat progress {
+        grid-column: 1 / -1;
+        width: 100%;
+        height: 18px;
+        accent-color: #65aa80;
+    }
+
+#stress-gauge {
+    accent-color: #dc9c69;
+}
+
+.game-menu {
+    display: grid;
+    gap: 12px;
+}
+
+/* 작은 화면에서 세로로 배치 */
+@media (max-width: 900px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .room-panel {
+        min-height: 400px;
+    }
+}
+/* [2주차] 활동 선택 창과 결과 창 */
+dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: 90vh;
+  padding: 0;
+  overflow: auto;
+  border: 3px solid #30354b;
+  border-radius: 12px;
+  background: #fff8ec;
+  color: #202b43;
+}
+
+dialog::backdrop {
+  background: rgb(24 35 54 / 55%);
+}
+
+.dialog-content {
+  padding: 24px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+}
+
+.dialog-header button {
+  padding: 8px 12px;
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.activity-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.activity-icon {
+  font-size: 36px;
+}
+
+/* JavaScript에서 선택한 버튼에 붙이는 클래스 */
+.activity-grid button.is-selected {
+  border-color: #397d65;
+  background: #b3ebc5;
+  box-shadow: inset 0 0 0 2px #397d65;
+}
+
+.activity-description {
+  min-height: 110px;
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #b8c8b5;
+  border-radius: 8px;
+  background: #edf3e8;
+}
+
+.activity-description p {
+  margin: 10px 0 0;
+  line-height: 1.7;
+}
+
+#run-week-button,
+#next-week-button {
+  width: 100%;
+}
+
+.result-table {
+  width: 100%;
+  margin: 20px 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.result-table th,
+.result-table td {
+  padding: 12px 6px;
+  border-bottom: 1px solid #c5c6be;
+  text-align: right;
+}
+
+.result-table th:first-child,
+.result-table td:first-child {
+  text-align: left;
+}
+
+.change-good {
+  color: #287449;
+  font-weight: bold;
+}
+
+.change-bad {
+  color: #b34848;
+  font-weight: bold;
+}
+
+#save-message {
+  margin-bottom: 20px;
+}
+
+/* [2주차] 원본 프로젝트의 기본 화면을 전체 방 레이어로 연결 */
+#game-screen{position:relative;isolation:isolate;min-height:850px;background:#efdfca;overflow:hidden}
+#home-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1}
+#game-screen .game-header{border:0;background:none;padding:18px 24px;height:76px}
+#game-screen .game-header h1{font-size:28px;text-shadow:1px 2px #fff8ec}
+#game-screen .game-layout{display:block;position:static;padding:0;margin:0}
+#game-screen .left-panel{position:relative;margin:10px 0 0 24px;display:grid;grid-template-columns:1fr 1.25fr;width:35%;max-width:490px;gap:12px}
+#game-screen .panel{background:#fff8ecef;border-width:2px;padding:15px;box-shadow:3px 4px 0 #27334b18}
+#game-screen .date-panel h2{font-size:17px;margin-bottom:10px}
+#game-screen .month{font-size:44px;margin:8px 0}
+#game-screen .week{font-size:20px;padding:5px}
+#environment-label{margin:10px 0 0;font-size:14px;color:#496d59}
+#game-screen .left-panel>.panel>h2{font-size:17px}
+#game-screen .calendar{grid-template-columns:1fr 1fr;gap:7px}
+#game-screen .calendar-week{font-size:14px;padding:12px 3px}
+#game-screen .right-panel{position:relative;width:35%;max-width:490px;margin:14px 0 24px 24px;gap:14px}
+#game-screen .right-panel h2{font-size:20px;margin-bottom:7px}
+#game-screen .stat{padding:10px 0;gap:5px}
+#game-screen .stat progress{height:13px}
+#game-screen .game-menu{grid-template-columns:1fr 1fr;gap:10px}
+#game-screen .game-menu button{min-height:50px;font-size:17px;padding:10px}
+#game-screen .room-panel{position:static;background:none;border:0;padding:0;min-height:0}
+#game-screen .dialogue-box{position:absolute;left:43%;right:24px;bottom:24px;background:#fff8ecf2;border-width:2px;padding:18px 22px}
+#game-screen .dialogue-box strong{font-size:21px}
+#game-screen #game-message{background:#fff8ecdc;border-radius:5px;padding:8px;font-size:14px}
+#game-screen #game-message:empty{display:none}
+@media(max-width:850px){
+ #game-screen{min-height:1250px}#home-scene{height:600px;object-position:65% top}
+ #game-screen .game-header{padding:12px}#game-screen .game-header h1{font-size:22px}
+ #game-screen .left-panel{margin-left:12px;width:43%;grid-template-columns:1fr;gap:8px}
+ #game-screen .left-panel .panel{padding:10px}#game-screen .month{font-size:32px}
+ #game-screen .calendar-week{padding:6px}
+ #game-screen .right-panel{margin:170px 12px 20px;width:auto;max-width:none}
+ #game-screen .dialogue-box{top:500px;bottom:auto;left:12px;right:12px;padding:12px}
+}
+
+/* [2주차] 교문 입학 연출 */
+#entrance-dialog{position:relative;width:min(1250px,96vw);max-width:96vw;padding:0;overflow:hidden;background:#fff8ec}
+#entrance-image{display:block;width:100%;height:auto}
+#entrance-skip{position:absolute;top:14px;right:14px;background:#fff8eced;padding:10px 16px}
+.entrance-dialogue{position:relative;padding:18px 24px;border-top:2px solid #30354b;background:#fff8ec}
+.entrance-dialogue strong{font-size:21px}.entrance-dialogue p{margin:8px 0 0;line-height:1.7}
+.entrance-zoom{animation:entrance-arrival 5s ease-out both;transform-origin:60% 60%}
+@keyframes entrance-arrival{from{transform:scale(1.035)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.entrance-zoom{animation:none}}
+
+/* [2주차] 활동 연출 창 */
+#activity-run-dialog{width:min(650px,94vw)}
+#activity-canvas{display:block;width:100%;height:auto;image-rendering:pixelated;border:2px solid #30354b;border-radius:6px;margin-bottom:18px}
+#activity-progress{display:block;width:100%;height:18px;accent-color:#79b58c;margin:8px 0 16px}
+.activity-controls{display:flex;justify-content:space-between;gap:12px}
+
+/* [2주차] 목업의 2×2 스탯 타일과 실제 날짜 달력 */
+#game-screen .left-panel{width:38%;max-width:600px;grid-template-columns:0.85fr 1.3fr;align-items:stretch}
+#game-screen .right-panel{width:38%;max-width:600px;margin-top:14px}
+#game-screen .calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+#game-screen .calendar-heading{text-align:center;font-weight:bold;font-size:13px;padding:3px 0}
+#game-screen .calendar-day{min-height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;font-size:13px;line-height:1.2;padding:3px 0}
+#game-screen .current-days{background:#c3e9c8}
+#game-screen .sunday{color:#b34e4e}
+#game-screen .rent-day{box-shadow:inset 0 0 0 2px #c58e4e;background:#fff0d3;color:#785126;font-weight:bold}
+#game-screen .rent-day.current-days{background:#e3e9be}
+#game-screen .rent-day small{font-size:10px;line-height:1.2;margin-top:2px}
+#calendar-heading{font-size:16px!important;margin-bottom:8px!important}
+#calendar-period{font-size:12px;margin:7px 0 0;color:#426a56}
+#rent-notice{font-size:11px;margin:5px 0 0;color:#986630;line-height:1.5}
+#game-screen .stats-tiles>.panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:12px}
+#game-screen .stats-tiles>.panel>h2{grid-column:1/-1;text-align:center;margin:0 0 3px;padding-bottom:8px;border-bottom:1px solid #d8c0a0}
+#game-screen .stats-tiles .stat{border:1px solid #dec7a7;border-radius:8px;background:#fff6e5;padding:12px 10px;align-items:center;min-height:94px;font-size:15px}
+#game-screen .stats-tiles .stat>span[id]{font-size:23px;font-weight:900;text-align:right;letter-spacing:-0.7px;overflow-wrap:anywhere}
+#game-screen .stats-tiles .stat>#money-text{font-size:clamp(16px,1.6vw,25px);grid-column:1/-1}
+#game-screen .stats-tiles .stat>#intelligence-text{font-size:30px}
+#game-screen .stats-tiles progress{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}
+.segments{grid-column:1/-1;display:grid;grid-template-columns:repeat(10,1fr);height:13px;gap:2px}
+.segments span{border:1px solid #6f7476;border-radius:2px;background:#e8e2dc}
+.segments.health .filled{background:#88d7ac}.segments.stress .filled{background:#efc167}
+#game-screen .game-menu button{min-height:48px}
+@media(min-width:851px){#game-screen{min-height:950px}#game-screen .dialogue-box{left:43%}}
+@media(max-width:850px){#game-screen .left-panel{width:46%;grid-template-columns:1fr}#game-screen .right-panel{width:auto;max-width:none;margin-top:90px}#game-screen{min-height:1400px}#game-screen .calendar-day{min-height:26px;font-size:11px}#game-screen .stats-tiles .stat>#money-text{font-size:22px}}
+
+/* [2주차] 기본 화면을 브라우저 안에 비율 유지하여 맞춥니다. */
+.game-viewport{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden;background:#e5d5c0}
+.game-viewport:has(#game-screen[hidden]){display:none}
+.game-viewport #game-screen{position:absolute;left:50%;top:50%;width:1672px;height:941px;min-height:0;margin:0;transform-origin:top left;overflow:hidden}
+.game-viewport #home-scene{width:1672px;height:941px;object-fit:fill;object-position:center}
+.game-viewport #game-screen .game-header{height:76px;padding:18px 28px}
+.game-viewport #game-screen .game-header h1{font-size:32px}
+.game-viewport #game-screen .left-panel{position:absolute;top:88px;left:28px;margin:0;width:600px;max-width:none;height:310px;display:grid;grid-template-columns:0.85fr 1.3fr;gap:12px;align-items:stretch}
+.game-viewport #game-screen .left-panel .panel{padding:15px}
+.game-viewport #game-screen .date-panel h2{font-size:22px;margin-bottom:12px}
+.game-viewport #game-screen .month{font-size:70px;margin:20px 0}
+.game-viewport #game-screen .week{font-size:28px;padding:7px}
+.game-viewport #game-screen #environment-label{font-size:16px;margin-top:12px}
+.game-viewport #game-screen .right-panel{position:absolute;top:414px;left:28px;width:600px;max-width:none;margin:0;gap:12px}
+.game-viewport #game-screen .stats-tiles>.panel{padding:12px;gap:8px}
+.game-viewport #game-screen .stats-tiles>.panel>h2{font-size:25px}
+.game-viewport #game-screen .stats-tiles .stat{min-height:92px;font-size:19px;padding:12px 10px}
+.game-viewport #game-screen .stats-tiles .stat>span[id]{font-size:28px}
+.game-viewport #game-screen .stats-tiles .stat>#money-text{font-size:30px}
+.game-viewport #game-screen .stats-tiles .stat>#intelligence-text{font-size:34px}
+.game-viewport #game-screen .game-menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.game-viewport #game-screen .game-menu button{min-height:62px;padding:12px;font-size:23px}
+.game-viewport #game-screen .dialogue-box{position:absolute;left:700px;right:28px;top:auto;bottom:25px;padding:16px 22px}
+.game-viewport #game-screen .dialogue-box strong{font-size:25px}
+.game-viewport #game-screen .dialogue-box p{font-size:21px;margin:8px 0 0}
+.game-viewport #game-screen #game-message{margin:0;padding:8px;font-size:15px}
+.game-viewport #game-screen .calendar-day{min-height:29px;font-size:16px}
+.game-viewport #game-screen .calendar-heading{font-size:16px}
+.game-viewport #game-screen .rent-day small{font-size:12px}
+.game-viewport #game-screen #calendar-heading{font-size:20px!important}
+.game-viewport #game-screen #calendar-period{font-size:14px;margin-top:7px}
+.game-viewport #game-screen #rent-notice{font-size:13px;margin-top:5px}
+
+/* [2주차] 왼쪽 위 잘림 수정: 백분율 이동 대신 축소 후 좌표 사용 */
+.game-viewport{width:100%;height:100dvh;margin:0;padding:0;position:relative;overflow:hidden}
+.game-viewport #game-screen{left:0;top:0;transform:scale(1);transform-origin:0 0;box-sizing:border-box;width:1672px;height:941px;min-height:0;max-width:none;max-height:none}
+
+/* [2주차] 승인 목업의 패널 간격. 달력 밑 설명을 제거한 높이에 맞춤. */
+.game-viewport #game-screen .left-panel{
+  top:88px;
+  height:282px;
+  align-items:stretch;
+}
+.game-viewport #game-screen .left-panel>.panel{
+  min-height:0;
+  height:282px;
+}
+.game-viewport #game-screen .left-panel>.panel:nth-child(2){
+  display:flex;
+  flex-direction:column;
+}
+.game-viewport #game-screen #calendar{
+  flex:1;
+  grid-template-rows:24px repeat(6,minmax(0,1fr));
+  gap:2px 3px;
+}
+.game-viewport #game-screen .calendar-day{
+  min-height:0;
+  padding:1px 0;
+  font-size:16px;
+}
+.game-viewport #game-screen .calendar-heading{
+  padding:2px 0;
+}
+.game-viewport #game-screen .rent-day small{
+  font-size:11px;
+  margin-top:1px;
+}
+.game-viewport #game-screen .right-panel{
+  top:388px;
+}
+.game-viewport #game-screen .date-panel h2{
+  font-size:23px;
+}
+.game-viewport #game-screen .month{
+  font-size:76px;
+  margin:14px 0;
+}
+.game-viewport #game-screen .stats-tiles .stat{
+  font-weight:bold;
+  font-size:21px;
+}
+.game-viewport #game-screen .stats-tiles .stat>span[id]{
+  font-size:31px;
+}
+.game-viewport #game-screen .stats-tiles>.panel>h2{
+  font-size:28px;
+}
+.game-viewport #game-screen .game-menu button{
+  font-size:25px;
+  min-height:68px;
+}
+
+/* [2주차] 6행 달력의 마지막 날짜가 잘리지 않도록 실제 행 높이 확보 */
+.game-viewport #game-screen .left-panel{height:340px}
+.game-viewport #game-screen .left-panel>.panel{height:340px;overflow:visible}
+.game-viewport #game-screen .left-panel>.panel:nth-child(2){display:block}
+.game-viewport #game-screen #calendar{display:grid;flex:none;height:auto;min-height:0;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:24px repeat(6,36px);gap:3px}
+.game-viewport #game-screen .calendar-day{height:36px;min-height:36px;max-height:36px;padding:2px 0;line-height:1.15;overflow:visible}
+.game-viewport #game-screen .calendar-heading{height:24px;padding:2px 0;line-height:20px}
+.game-viewport #game-screen .right-panel{top:448px}
+
+/* [2주차] 활동별 이미지 연속 프레임 재생 */
+#activity-canvas{image-rendering:auto;max-height:58dvh;object-fit:contain;background:#fff2dc}
+
+/* [2주차] 월간 계획 편집기와 그림 중심 주간 결과 */
+#schedule-dialog{width:min(960px,95vw)}
+#month-plan-weeks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 22px}
+.plan-week{display:flex;flex-direction:column;gap:7px;align-items:center;padding:10px;background:#fff6e6;border:2px solid #c9b99e;border-radius:8px;min-width:0}
+.plan-week[aria-pressed=true]{border-color:#437d63;background:#e1f1dc;box-shadow:0 0 0 2px #86b79a}
+.plan-week small{font-size:12px;color:#627766}.plan-week:disabled{opacity:.65}
+.plan-picture{display:block;width:100%;height:110px;font-size:40px;line-height:110px;text-align:center;border-radius:5px;background-color:#eee7d9}
+.picture-study,.picture-work,.picture-leisure,.picture-rest{background-image:url('assets/activity-frames.png');background-size:200% 400%;background-repeat:no-repeat}
+.picture-study{background-position:0 0}.picture-work{background-position:0 33.3333%}.picture-leisure{background-position:0 66.6667%}.picture-rest{background-position:0 100%}
+#schedule-dialog .activity-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+#schedule-dialog .activity-grid button{min-height:80px;font-size:16px;padding:10px}
+#schedule-dialog .activity-icon{font-size:28px}
+#schedule-dialog .activity-description{min-height:80px}
+#save-plan-button{margin:0 10px 10px 0}
+#run-week-button{width:auto;min-width:190px}
+#result-dialog{width:min(900px,95vw)}
+#result-summary{color:#627766}
+.result-layout{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:20px;margin:18px 0}
+.result-hero{padding:12px;border:1px solid #d4c3a6;border-radius:10px;background:#fff2dd}
+.result-picture{width:100%;aspect-ratio:1.5;border-radius:7px}
+.result-hero h3{font-size:20px;margin:14px 0 8px}
+.result-hero p{font-size:14px;line-height:1.7;margin:0;color:#687468}
+#result-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.growth-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;background:#fff7e9;border:1px solid #d7c8ad;border-radius:9px}
+.growth-card>span{font-size:15px;font-weight:bold}.growth-card>strong{font-size:32px}
+.growth-card>b{font-size:16px;border-radius:5px;padding:4px 7px}
+.growth-card>small{font-size:13px;color:#7a8178}
+.growth-card progress{width:100%;height:10px;accent-color:#80bd91}
+.delta-positive{color:#2d7d51;background:#e0f1de}.delta-negative{color:#a35244;background:#f6e7dc}.delta-neutral{color:#7a8178}
+.money-summary{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:12px;padding:15px;border:1px solid #dcc89c;border-radius:8px;background:#fff0cf}
+.money-summary>strong{font-size:23px}.money-summary>small{grid-column:1/-1;color:#7e7865}
+#result-month-timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border-top:1px solid #ddd4c2;padding-top:16px}
+.result-week{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 3px;border-radius:7px;background:#eee9df;color:#748174}
+.result-week.done{background:#dcefdc}.result-week>span{font-size:23px}.result-week>b{font-size:12px}
+#result-dialog #save-message{font-size:13px;color:#64816a;margin:15px 0}
+@media(max-width:600px){.result-layout{grid-template-columns:1fr}.result-hero{display:grid;grid-template-columns:130px 1fr;column-gap:14px}.result-picture{grid-row:1/3}.result-hero h3{margin:5px 0}.plan-picture{height:65px;line-height:65px}.plan-week{font-size:12px;padding:7px}#result-cards{gap:6px}.growth-card{padding:12px 4px}.money-summary>strong{font-size:19px}}
+
+/* [2주차] 승인된 결과 목업을 실제 UI로 구현 */
+#result-dialog{position:fixed;padding:0;max-width:none;max-height:none;overflow:hidden;border:4px solid #27334b;border-radius:13px;background:#fff8ec;box-shadow:7px 8px 0 #24314b3d}
+#result-dialog::backdrop{background:#24304488}
+#result-dialog>.result-stage{position:absolute;left:0;top:0;width:1360px;height:740px;padding:34px;transform-origin:0 0;background:linear-gradient(115deg,#fffaf0,#fff7e7);display:flex;flex-direction:column;gap:24px;box-sizing:border-box}
+.result-stage .result-main{display:grid;grid-template-columns:408px minmax(0,1fr);gap:24px;flex:1;min-height:0}
+.result-stage .result-left{display:flex;flex-direction:column;min-height:0}
+.result-stage #result-title{font-size:48px;line-height:1.15;margin:0 0 14px;letter-spacing:-1.8px;font-weight:900;border-left:8px solid #92d4ad;padding-left:18px}
+.result-stage #result-summary{font-size:18px;font-weight:bold;margin:0 0 18px;padding:8px 10px;border:2px solid #d9c5a5;border-radius:14px;background:#fff0d7;text-align:center;color:#27334b}
+.result-stage .result-hero{display:flex;flex-direction:column;padding:0;overflow:hidden;border:3px solid #27334b;border-radius:10px;background:#fff0d7;flex:1;min-height:0}
+.result-stage .result-picture{width:100%;height:310px;min-height:310px;aspect-ratio:auto;border-radius:0;background-size:200% 400%}
+.result-stage .result-hero h3{display:flex;align-items:center;justify-content:center;flex:1;margin:0;padding:12px;font-size:39px;text-align:center;border-top:2px solid #d1bba0;color:#17253a}
+.result-stage .result-right{display:flex;flex-direction:column;gap:16px;padding-top:18px;min-height:0}
+.result-stage #result-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.result-stage .growth-card{display:flex;align-items:stretch;gap:13px;min-height:225px;padding:17px 14px;border:2px solid #27334b;border-radius:12px;background:#fff9ef}
+.result-stage .growth-card>span{display:flex;align-items:center;gap:8px;font-size:25px;font-weight:900;white-space:nowrap}
+.result-stage .growth-card img{width:43px;height:43px;object-fit:contain;image-rendering:pixelated}
+.result-value-row{display:flex;justify-content:center;align-items:center;gap:10px}
+.result-value-row strong{font-size:70px;line-height:1.1;font-weight:900;letter-spacing:-2px}
+.result-value-row b{font-size:24px;border-radius:10px;padding:7px 10px;white-space:nowrap}
+.result-stage .growth-card>small{font-size:21px;text-align:center;color:#7f8077;font-weight:bold}
+.result-segments{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:2px;height:24px;margin-top:auto}
+.result-segments i{display:block;border:1px solid #354052;border-radius:3px;background:#e8e2dc}
+.result-segments.health .filled{background:#91dfae}.result-segments.stress .filled{background:#f2ca64}
+.result-stage .delta-positive{background:#71b193;color:white}.result-stage .delta-negative{background:#b97668;color:white}.result-stage .delta-neutral{background:#e9dbc3;color:#8c7c65}
+.result-stage .money-summary{display:flex;align-items:center;gap:16px;min-height:82px;margin:0;padding:12px 17px;border:2px solid #cc9e59;border-radius:12px;background:#fff0cf}
+.money-label{display:flex;align-items:center;gap:9px;font-size:26px;font-weight:900;white-space:nowrap}
+.money-label img{width:46px;height:46px;image-rendering:pixelated}
+.result-stage #result-money-balance{font-size:39px;letter-spacing:-1.4px;white-space:nowrap;margin-left:auto}
+.result-stage #result-money-change{font-size:17px;white-space:nowrap;border-radius:8px;padding:6px 9px}
+.result-stage .result-plan{border-top:2px solid #c5c3bc;padding-top:12px;flex:1}
+.result-stage #result-plan-title{font-size:25px;margin:0 0 10px;border-left:7px solid #8cd0a7;padding-left:12px}
+.result-stage #result-month-timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:0;border:0}
+.result-stage .result-week{display:flex;align-items:center;gap:7px;padding:9px 4px;background:#fff4dd;border:1px solid #9c8d77;border-radius:9px;color:#27334b}
+.result-stage .result-week.done{background:#c6edcf;border-color:#598c67}
+.result-stage .result-week>small{font-size:21px;font-weight:900}
+.result-plan-activity{display:flex;align-items:center;justify-content:center;gap:5px;font-size:20px!important;font-weight:bold;white-space:nowrap}
+.result-plan-activity img{width:29px;height:29px;image-rendering:pixelated}
+.result-stage .result-week>b{font-size:15px;border-radius:8px;padding:3px 12px;background:#edd7ad}
+.result-stage .result-week.done>b{background:#9ed9b5}
+.result-stage .result-footer{display:flex;align-items:center;justify-content:space-between;gap:15px;border-top:2px solid #d8c9af;padding-top:18px;min-height:85px}
+.result-stage #save-message{font-size:19px;font-weight:bold;color:#64816a;margin:0;max-width:710px}
+.result-stage #next-week-button{width:auto;min-width:340px;margin:0;padding:14px 20px;font-size:28px;font-weight:900;border:3px solid #27334b;border-radius:10px;background:#b3ebc5}
+
+/* 초기 게임 화면: 기존 방 그래픽과 연결되는 타이틀 UI */
+#title-screen {position:relative;isolation:isolate;overflow:hidden;min-height:100dvh;background:#f7e8d2 url('assets/room.png') center/cover no-repeat;place-items:center start;padding:clamp(24px,6vw,100px);}
+#title-screen::before {content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(255,246,229,.98) 0%,rgba(255,246,229,.95) 30%,rgba(255,246,229,.25) 62%,transparent 100%);}
+#title-screen .title-content {text-align:left;width:min(420px,100%);padding:20px 0;}
+.title-tag {display:inline-block;font-size:12px;letter-spacing:3px;font-weight:800;color:#537968;border-left:4px solid #77b393;padding-left:12px;margin-bottom:24px;}
+#title-screen h1 {font-size:clamp(48px,6vw,88px);line-height:1.12;letter-spacing:-5px;margin:0;font-weight:900;text-shadow:3px 3px 0 #fff9ee;}
+#title-screen h1 span {color:#39775f;}
+.title-rule {width:56px;height:5px;background:#d2ae6b;margin:28px 0 32px;box-shadow:8px 0 0 #e5c996;}
+.title-actions {display:grid;gap:12px;width:min(310px,100%);}
+.title-actions button {display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border:2px solid #303b50;border-radius:5px;box-shadow:0 4px 0 #303b50;font-size:20px;text-align:left;transition:transform .12s,box-shadow .12s;}
+.title-actions button:hover:not(:disabled) {transform:translateY(-2px);box-shadow:0 6px 0 #303b50;}
+.title-actions .primary-button {background:#b3e7c9;}
+.title-actions .title-menu-button {justify-content:center;border:0;background:transparent;box-shadow:none;font-size:14px;color:#53645e;padding:12px;}
+.title-actions .title-menu-button:hover {box-shadow:none;background:#fff8ec88;}
+.title-save-note {font-size:12px;color:#68756c;min-height:18px;margin:18px 0 0;}
+.title-corner {position:absolute;bottom:24px;right:30px;font:bold 26px monospace;color:#3c705c;background:#fff7e7c9;padding:8px 14px;border:2px solid #3c705c;}
+@media(max-width:600px) {#title-screen{background-position:62% center;}#title-screen::before{background:rgba(255,246,229,.88);}#title-screen .title-content{margin:auto;}#title-screen h1{letter-spacing:-3px;}}
+@media(max-height:650px) {#title-screen{padding:20px 6vw;}#title-screen h1{font-size:52px;}.title-tag{margin-bottom:12px;}.title-rule{margin:16px 0 20px;}.title-actions button{padding:10px 18px;}.title-save-note{margin-top:12px;}}
+
+/* 승인한 타이틀 목업의 버튼과 설정 창 */
+#title-screen h1{font-weight:1000;text-shadow:3px 0 currentColor;}
+.title-actions button:not(.title-menu-button){border-radius:0;clip-path:polygon(6px 0,calc(100% - 6px) 0,calc(100% - 6px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 6px) calc(100% - 4px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 4px),0 calc(100% - 4px),0 4px,6px 4px);}
+#settings-dialog{width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:0;border:3px solid #303b50;border-radius:8px;background:#fff8ec;color:#202b43;}
+#settings-dialog::backdrop{background:#17263788;}
+.settings-panel{padding:28px;display:grid;gap:16px;}
+.settings-panel h2{margin:0 0 8px;}
+.settings-panel select{font:inherit;padding:12px;background:#fffdf5;color:#202b43;border:2px solid #303b50;border-radius:4px;}
+.settings-panel p{font-size:13px;line-height:1.6;margin:0;color:#53645e;}
+.motion-option{display:flex;align-items:center;gap:10px;}
+.motion-option input{width:20px;height:20px;accent-color:#39775f;}
+@media(max-height:650px){.title-actions{gap:8px;}.title-actions button{padding:8px 18px;}.title-rule{margin:12px 0 16px;}}
+/* A의 기본 레이아웃은 보존하고 B 기능 창만 추가한다. */
+#b-content-dialog,#b-exam-dialog{width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:0;background:#fff8ec;color:#202b43;border:3px solid #30354b;border-radius:10px;}
+#b-content-dialog::backdrop,#b-exam-dialog::backdrop{background:#202b4388;}.b-panel{padding:24px;display:grid;gap:16px;}.b-panel h2,.b-panel p{margin:0;}.b-panel p{line-height:1.7;}.b-panel fieldset{border:1px solid #b4a68e;margin:0 0 16px;padding:16px;}.b-panel fieldset label{display:block;padding:8px;}.b-panel input[type=radio]{margin-right:10px;}.b-shop-row{padding:16px 0;border-bottom:1px solid #d7cbb8;display:grid;gap:8px;}.b-shop-row div{display:flex;gap:8px;flex-wrap:wrap;}#b-content-body{display:grid;gap:12px;}#b-exam-error{color:#a63737;}.weekly-details{font-size:12px;margin:6px 0 0;line-height:1.5;max-height:44px;overflow:auto;}#result-dialog .result-footer{gap:12px;}

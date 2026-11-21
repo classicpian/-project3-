@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>컴공생 키우기</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="main.js"></script>
+</head>
+
+<body>
+  <!-- [1주차] 초기 화면 -->
+  <section id="title-screen" class="screen centered-screen">
+    <div class="title-content">
+      <span class="title-tag">CAMPUS LIFE SIMULATION</span>
+      <h1>컴공생<br><span>키우기</span></h1>
+      <div class="title-rule" aria-hidden="true"></div>
+      <div class="title-actions">
+        <button id="title-new-button" class="primary-button">새 게임 <span aria-hidden="true">▶</span></button>
+        <button id="title-continue-button">이어하기 <span aria-hidden="true">↗</span></button>
+        <button id="title-settings-button">설정 <span aria-hidden="true">⚙</span></button><button id="start-button" class="title-menu-button">메뉴 열기</button>
+      </div>
+      <p class="title-save-note" id="title-save-note"></p>
+    </div><span class="title-corner" aria-hidden="true">&lt;/&gt;</span>
+  </section>
+
+  <!-- [1주차] 시작 메뉴 -->
+  <section id="menu-screen" class="screen centered-screen" hidden>
+    <div class="menu-panel panel">
+      <h2>컴공생 키우기</h2>
+
+      <button id="new-game-button" class="primary-button">
+        새 게임
+      </button>
+      <button disabled>이어하기 · 연결 예정</button>
+      <button id="back-button">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- [1주차] 이름 입력 화면 -->
+  <section id="name-screen" class="screen centered-screen" hidden>
+    <form id="name-form" class="menu-panel panel" novalidate>
+      <h2>이름을 알려주세요</h2>
+
+      <label for="player-name">플레이어 이름</label>
+      <input
+        id="player-name"
+        name="playerName"
+        type="text"
+        placeholder="예: 김코딩"
+        maxlength="10"
+        autocomplete="off"
+        aria-describedby="name-help name-error"
+      >
+
+      <p id="name-help" class="help-text">
+        한글·영문·숫자로 1~10자를 입력하세요.
+      </p>
+
+      <p id="name-error" class="error-text" role="alert"></p>
+
+      <button type="submit" class="primary-button">
+        이 이름으로 시작
+      </button>
+
+      <button id="name-back-button" type="button">
+        돌아가기
+      </button>
+    </form>
+  </section>
+
+  <!-- [1주차] 기본 화면 -->
+  <div class="game-viewport">
+<section id="game-screen" class="screen" hidden>
+    <!-- [2주차] 게임 날짜·날씨에 연결된 방과 캐릭터 -->
+    <canvas id="home-scene" width="1672" height="941" aria-label="계절과 날씨가 변하는 자취방"></canvas>
+    <header class="game-header">
+      <h1>컴공생 키우기</h1>
+      <button id="menu-button">메뉴</button>
+    </header>
+
+    <main class="game-layout">
+      <aside class="left-panel">
+        <section class="panel date-panel">
+          <h2 id="semester-text">1학년 1학기</h2>
+          <p id="month-text" class="month">3월</p>
+          <p id="week-text" class="week">1주차</p><p id="environment-label" role="status"></p>
+        </section>
+
+        <section class="panel">
+          <h2 id="calendar-heading">이번 달</h2><div id="calendar" class="calendar"></div></section>
+      </aside>
+
+      <section class="room-panel panel" aria-label="캐릭터의 방">
+
+        <div class="dialogue-box">
+          <!-- [2주차] 입력한 이름 표시 -->
+          <strong id="dialogue-name"></strong>
+          <p id="dialogue-text">
+            대학 생활 첫 주! 이번 주에는 무엇을 해볼까?
+          </p>
+        </div>
+      </section>
+
+      <aside class="right-panel stats-tiles">
+        <section class="panel">
+          <h2>
+            <span id="profile-name"></span>
+            <span>· <span id="profile-age">20</span>세</span>
+          </h2>
+
+          <div class="stat">
+            <label for="health-gauge">♥ 체력</label>
+            <span id="health-text"></span>
+            <progress id="health-gauge" max="100"></progress><div id="health-segments" class="segments health" aria-hidden="true"></div>
+          </div>
+
+          <div class="stat">
+            <span>📖 지능</span>
+            <span id="intelligence-text"></span>
+          </div>
+
+          <div class="stat">
+            <label for="stress-gauge">⚡ 스트레스</label>
+            <span id="stress-text"></span>
+            <progress id="stress-gauge" max="100"></progress><div id="stress-segments" class="segments stress" aria-hidden="true"></div>
+          </div>
+
+          <div class="stat">
+            <span>🪙 소지금</span>
+            <span id="money-text"></span>
+          </div>
+        </section>
+
+        <nav class="game-menu" aria-label="게임 메뉴">
+          <button id="schedule-button" class="primary-button">
+            일정 짜기
+          </button>
+          <button id="events-button">주요 일정</button>
+          <button id="records-button">성장 기록</button>
+          <button id="shop-button">상점</button>
+        </nav>
+
+        <p id="game-message" class="help-text" role="status"></p>
+      </aside>
+    </main>
+  </section>
+  </div>
+<!-- [2주차] 주간 활동 선택 창 -->
+<dialog id="schedule-dialog" aria-labelledby="schedule-title">
+  <div class="dialog-content">
+    <header class="dialog-header">
+      <h2 id="schedule-title">이번 달 계획</h2>
+      <button id="close-schedule-button" type="button">
+        닫기
+      </button>
+    </header>
+
+    <p id="schedule-date"></p>
+    <p>주차를 누른 뒤 활동을 골라주세요. 실행은 한 주씩 진행합니다.</p><div id="month-plan-weeks"></div>
+
+    <div id="activity-buttons" class="activity-grid">
+      <button type="button" data-activity="study" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">📖</span>
+        공부
+      </button>
+
+      <button type="button" data-activity="work" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">💰</span>
+        아르바이트
+      </button>
+
+      <button type="button" data-activity="leisure" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">🎮</span>
+        여가
+      </button>
+
+      <button type="button" data-activity="rest" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">🛏️</span>
+        휴식
+      </button>
+    </div>
+
+    <div class="activity-description">
+      <strong id="selected-activity-name">선택한 활동 없음</strong>
+      <p id="selected-activity-description">
+        활동을 누르면 설명이 표시됩니다.
+      </p>
+    </div>
+
+    <p id="schedule-error" class="error-text" role="alert"></p>
+
+    <button id="save-plan-button" type="button" disabled>계획 저장</button><button id="run-week-button" class="primary-button" disabled>
+      이번 주 시작
+    </button>
+  </div>
+</dialog>
+
+<!-- [2주차] 주간 결과 창 -->
+
+<!-- [2주차] 승인 목업의 주간 결과 창 -->
+<dialog id="result-dialog" aria-labelledby="result-title">
+ <div class="dialog-content result-stage">
+  <div class="result-main">
+   <div class="result-left">
+    <h2 id="result-title">이번 주 결과</h2>
+    <p id="result-summary"></p>
+    <div class="result-hero">
+     <div id="result-picture" role="img"></div>
+     <h3 id="result-activity"></h3>
+     <p id="result-caption" hidden></p>
+    </div>
+   </div>
+   <div class="result-right">
+    <div id="result-cards"></div>
+    <div class="money-summary">
+     <span class="money-label"><img src="assets/icon-money.png" alt="">소지금</span>
+     <strong id="result-money-balance"></strong>
+     <span id="result-money-change"></span>
+     <small id="result-money-total" hidden></small>
+    </div>
+    <section class="result-plan" aria-labelledby="result-plan-title">
+     <h3 id="result-plan-title">이번 달 계획</h3>
+     <div id="result-month-timeline"></div>
+    </section>
+   </div>
+  </div>
+  <footer class="result-footer">
+   <div><p id="save-message" role="status"></p><p id="weekly-details" class="weekly-details"></p></div>
+   <button id="next-week-button" class="primary-button">다음 주 계획 확인</button>
+  </footer>
+ </div>
+</dialog>
+<!-- [2주차] 입학 장면. -->
+<dialog id="entrance-dialog" aria-label="대학 입학 장면">
+  <img id="entrance-image" src="assets/entrance.png" alt="대학 교문 앞에서 26학번 과잠을 입은 캐릭터">
+  <button id="entrance-skip">건너뛰기</button>
+  <div class="entrance-dialogue">
+    <strong id="entrance-name"></strong>
+    <p id="entrance-caption"></p>
+  </div>
+</dialog><!-- [2주차] 활동 실행 연출 -->
+<dialog id="activity-run-dialog" aria-labelledby="activity-run-title">
+  <div class="dialog-content">
+    <h2 id="activity-run-title"></h2>
+    <canvas id="activity-canvas" width="240" height="140" aria-label="선택한 활동을 수행하는 도트 캐릭터"></canvas>
+    <label for="activity-progress">이번 주 진행</label>
+    <progress id="activity-progress" max="100" value="0"></progress>
+    <div class="activity-controls">
+      <button id="activity-speed" aria-pressed="false">배속 ×1</button>
+      <button id="activity-skip">연출 건너뛰기</button>
+    </div>
+  </div>
+</dialog><dialog id="settings-dialog" aria-labelledby="settings-heading">
+<form method="dialog" class="settings-panel">
+<h2 id="settings-heading">설정</h2>
+<label for="setting-speed">활동 연출 속도</label>
+<select id="setting-speed"><option value="1">기본 ×1</option><option value="3">빠르게 ×3</option></select>
+<label class="motion-option"><input id="setting-motion" type="checkbox"> 움직임 줄이기</label>
+<p>움직임 줄이기는 배경·캐릭터 움직임을 줄이고 연출 시간을 단축합니다.</p>
+<p id="settings-status" role="status"></p>
+<button value="close" class="primary-button">완료</button>
+</form></dialog><dialog id="b-content-dialog" aria-labelledby="b-content-title"><div class="b-panel"><h2 id="b-content-title"></h2><div id="b-content-body"></div><button id="b-content-close">닫기</button></div></dialog>
+<dialog id="b-exam-dialog" aria-labelledby="b-exam-title"><form id="b-exam-form" class="b-panel"><h2 id="b-exam-title"></h2><p id="b-exam-description"></p><div id="b-exam-questions"></div><p id="b-exam-error" role="alert"></p><button class="primary-button" type="submit">답안 제출</button></form></dialog>
+<script>if(location.protocol==='file:'){document.addEventListener('DOMContentLoaded',function(){const p=document.createElement('p');p.textContent='B의 Web Worker 연결본입니다. 파일을 직접 열지 말고, 폴더의 게임실행.cmd 또는 VS Code Live Server로 실행하세요.';p.style.cssText='position:fixed;inset:0 0 auto;z-index:99999;padding:20px;background:#fff3cd;color:#382d14;margin:0;text-align:center';document.body.append(p);});}</script>
+</body>
+</html>
