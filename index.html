@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>컴공생 키우기 - 로직 테스트</title>
+  <style>
+    body { font-family: sans-serif; max-width: 780px; margin: 24px auto; padding: 0 16px; background: #f4f6f9; color: #222; }
+    .box { background: #fff; padding: 16px; border-radius: 8px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    button { padding: 8px 12px; margin: 4px; cursor: pointer; border: 1px solid #334155; background: #1e293b; color: #fff; border-radius: 6px; font-size: 13px; }
+    button:hover { background: #334155; }
+    select { padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; }
+    .log { font-size: 14px; line-height: 1.6; max-height: 220px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 6px; }
+    .advice { color: #0f766e; font-size: 14px; }
+    .item-desc { margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 6px; font-size: 12.5px; line-height: 1.6; color: #334155; }
+    #examBox { display: none; border: 2px solid #dc2626; }
+  </style>
+</head>
+<body>
+  <h2>🎓 컴공생 키우기 (로직 & Worker 통합 테스트)</h2>
+
+  <div class="box">
+    <select id="genderSelect">
+      <option value="male">남자</option>
+      <option value="female">여자</option>
+    </select>
+    <button id="btnNew">새 게임 시작</button>
+    <button id="btnLoad">이어하기</button>
+  </div>
+
+  <div class="box">
+    <strong>📅 상태:</strong> <span id="statusText">게임을 시작해 주세요.</span>
+    <div id="adviceBox" class="advice" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="box">
+    <strong>📌 주간 활동:</strong><br />
+    <button data-act="study" title="체력 -10 / 지능 +20 / 스트레스 +10">공부</button>
+    <button data-act="partTime" title="체력 -10 / 소지금 +60만 / 스트레스 +10">알바 (+60만)</button>
+    <button data-act="leisure" title="체력 +40 / 소지금 -10만 / 스트레스 -40">여가 (-10만)</button>
+    <button data-act="rest" title="체력 +30 / 스트레스 -20">휴식</button>
+  </div>
+
+  <div class="box">
+    <strong>⚡ 특수 이벤트 테스트:</strong><br />
+    <button id="btnMilitary">군대 입대 (남자 1회)</button>
+    <button id="btnComp">대회/해커톤 참가</button>
+  </div>
+
+  <div class="box">
+    <strong>🛒 상점 테스트:</strong><br />
+    <button data-buy="energy_drink" title="사용 시 체력 +15, 스트레스 +10 (주 2회)">에너지 드링크 구매 (5천)</button>
+    <button data-use="energy_drink" title="체력 +15, 스트레스 +10">에너지 드링크 사용</button>
+    <button data-buy="iseul_cham" title="사용 시 체력 -25, 스트레스 -30 (주 1회)">이슬(참) 구매 (3만)</button>
+    <button data-use="iseul_cham" title="체력 -25, 스트레스 -30">이슬(참) 사용</button>
+    <button data-buy="gpt_plus" title="4주간 월간 과제 100% 자동 성공">GPT Plus (3만)</button>
+    <button data-buy="jokbo" title="다음 전공 시험 요구 지능 10 감소 (1회성)">족보 구매 (5만)</button>
+    <br />
+    <button data-buy="gemini_sub" title="영구: 공부 시 지능 획득량 +20%">제미나이 영구 (30만)</button>
+    <button data-buy="living_set" title="영구: 휴식 시 체력 회복량 +20%">자취 세트 (30만)</button>
+    <button data-buy="herman_miller" title="영구: 모든 활동 체력 소모량 -20%">허먼밀러 의자 (50만)</button>
+    <button data-buy="new_pc" title="영구: 공부 시 지능 +30%, 스트레스 -15%">최신형 컴퓨터 (120만)</button>
+    <br />
+    <button data-buy="cert_ticket" title="방학 전용: 다음 주 자격증 합격 판정 (지능 / (다음 시험 요구 지능 + 50))">자격증 접수권 (5만 / 방학 전용)</button>
+    <button data-buy="toeic_ticket" title="방학 전용: 방학 마지막 주 토익 시험 응시">토익 응시권 (5만 / 방학 전용)</button>
+
+    <div class="item-desc">
+      <strong>📖 아이템 효과 안내</strong><br />
+      • <strong>에너지 드링크 (5천):</strong> 사용 시 체력 +15, 스트레스 +10 (주당 2회 제한)<br />
+      • <strong>이슬(참) (3만):</strong> 사용 시 체력 -25, 스트레스 -30 (주당 1회 제한)<br />
+      • <strong>GPT Plus (3만):</strong> 구매 후 4주간 매달 4주차 과제 100% 성공 (+25점)<br />
+      • <strong>족보 (5만):</strong> 다음 전공 시험(중간·기말) 요구 지능 -10 감소 (1회 소모)<br />
+      • <strong>제미나이 영구 구독 (30만):</strong> 영구 패시브 — 공부 시 지능 획득량 +20%<br />
+      • <strong>자취 세트 (30만):</strong> 영구 패시브 — 휴식 시 체력 회복량 +20%<br />
+      • <strong>허먼밀러 의자 (50만):</strong> 영구 패시브 — 모든 활동의 체력 소모량 -20%<br />
+      • <strong>최신형 컴퓨터 (120만):</strong> 영구 패시브 — 공부 시 지능 +30%, 스트레스 -15%<br />
+      • <strong>자격증 접수권 (5만):</strong> 방학 전용 — 다음 주 합격 판정 (성공 시 취업 스펙 +1)<br />
+      • <strong>토익 응시권 (5만):</strong> 방학 전용 — 방학 마지막 주(8월·2월 4주) 토익 시험 응시
+    </div>
+  </div>
+
+  <div class="box" id="examBox">
+    <h3 id="examTitle">시험</h3>
+    <div id="examQuestions"></div>
+    <button id="btnSubmitExam">답안 제출</button>
+  </div>
+
+  <div class="box">
+    <strong>📝 실행 로그:</strong>
+    <div id="logBox" class="log"></div>
+  </div>
+
+  <script type="module">
+    import { MYGameController } from './src/logic/MYGameController.js';
+
+    const statusText = document.getElementById('statusText');
+    const adviceBox = document.getElementById('adviceBox');
+    const logBox = document.getElementById('logBox');
+    const examBox = document.getElementById('examBox');
+    const examTitle = document.getElementById('examTitle');
+    const examQuestions = document.getElementById('examQuestions');
+    const btnComp = document.getElementById('btnComp');
+
+    function addLog(text) {
+      const p = document.createElement('div');
+      p.textContent = text;
+      logBox.prepend(p);
+    }
+
+    function renderState(state, date) {
+      if (!state || !state.player) return;
+      const p = state.player;
+      const d = date ? `${date.academicYear}학년 ${date.month}월 ${date.weekInMonth}주 (${date.semesterId})` : '';
+      const awardCount = state.awards ? state.awards.length : 0;
+      const jokboTag = state.activeEffects?.jokboActive ? ' (족보 적용)' : '';
+      const thresholdText = state.examThreshold !== undefined ? ` / 시험 요구: ${state.examThreshold}${jokboTag}` : '';
+      statusText.textContent = `${d} | 체력: ${p.health}/${p.maxHealth} | 지능: ${p.intelligence}${thresholdText} | 스트레스: ${p.stress} | 소지금: ${p.money.toLocaleString()}원 | 토익: ${p.toeicScore || 0}점 | 수상/자격증: ${awardCount}개`;
+
+      if (state.hackathonThreshold === null) {
+        btnComp.textContent = '대회/해커톤 참가 (방학 불가)';
+      } else if (state.hackathonThreshold !== undefined) {
+        btnComp.textContent = `대회/해커톤 참가 (요구 지능 ${state.hackathonThreshold})`;
+      }
+    }
+
+    const controller = new MYGameController({
+      onState: (msg) => {
+        renderState(msg.state, msg.date);
+        if (msg.result?.message) {
+          addLog(msg.result.message);
+        } else if (msg.result?.item) {
+          addLog(`아이템 처리 완료: ${msg.result.item.name}`);
+        } else {
+          addLog('상태가 갱신되었습니다.');
+        }
+      },
+      onWaitExam: (msg) => {
+        examBox.style.display = 'block';
+        const examLabel =
+          msg.exam.examType === 'toeic'
+            ? '방학 토익 시험'
+            : `${msg.exam.semesterId} ${msg.exam.examType === 'mid' ? '중간고사' : '기말고사'}`;
+        examTitle.textContent = `${examLabel} (난이도: ${msg.exam.difficulty}, 요구 지능: ${msg.exam.threshold})`;
+        examQuestions.innerHTML = msg.exam.questions.map((q, idx) => `
+          <div style="margin-bottom:10px;">
+            <div><strong>Q${idx + 1}. ${q.prompt}</strong></div>
+            ${q.options.map((opt, oIdx) => `
+              <label style="margin-right:10px;">
+                <input type="radio" name="q_${idx}" value="${oIdx}" /> ${opt}
+              </label>
+            `).join('')}
+          </div>
+        `).join('');
+        msg.logs.forEach(addLog);
+      },
+      onWeekDone: (msg) => {
+        examBox.style.display = 'none';
+        renderState(msg.state, msg.date);
+        if (msg.result?.logs) msg.result.logs.forEach(addLog);
+        if (msg.ended) {
+          addLog('🏁 게임 종료! 엔딩: ' + msg.endings.map(e => e.title).join(', '));
+        }
+      },
+      onAdvice: (tips) => {
+        adviceBox.innerHTML = tips.join('<br />');
+      },
+      onError: (reason) => {
+        addLog('❌ 오류: ' + reason);
+      },
+    });
+
+    document.getElementById('btnNew').onclick = () => {
+      const gender = document.getElementById('genderSelect').value;
+      logBox.innerHTML = '';
+      examBox.style.display = 'none';
+      controller.MYStartGame(gender);
+    };
+
+    document.getElementById('btnLoad').onclick = () => controller.MYLoadGame();
+
+    document.querySelectorAll('[data-act]').forEach((btn) => {
+      btn.onclick = () => controller.MYSendCommand('RUN_WEEK', { activityId: btn.dataset.act });
+    });
+
+    document.querySelectorAll('[data-buy]').forEach((btn) => {
+      btn.onclick = () => controller.MYSendCommand('BUY', { itemId: btn.dataset.buy });
+    });
+
+    document.querySelectorAll('[data-use]').forEach((btn) => {
+      btn.onclick = () => controller.MYSendCommand('USE_ITEM', { itemId: btn.dataset.use });
+    });
+
+    document.getElementById('btnMilitary').onclick = () => {
+      controller.MYSendCommand('MILITARY');
+    };
+
+    btnComp.onclick = () => {
+      controller.MYSendCommand('COMPETITION', { compId: 'HACKATHON' });
+    };
+
+    document.getElementById('btnSubmitExam').onclick = () => {
+      const answers = [0, 1, 2, 3].map((idx) => {
+        const checked = document.querySelector(`input[name="q_${idx}"]:checked`);
+        return checked ? Number(checked.value) : -1;
+      });
+      controller.MYSendCommand('SUBMIT_EXAM', { answers });
+    };
+  </script>
+</body>
+</html>
