@@ -301,6 +301,19 @@ export class MYGameEngine {
       }
     }
 
+    // 남자 캐릭터가 3학년 1학기까지 미입대 상태면 자동 입대 처리
+    if (
+      nextDate.academicYear === 3 &&
+      nextDate.month === 3 &&
+      nextDate.weekInMonth === 1 &&
+      this.player.gender === 'male'
+    ) {
+      const milRes = this.MYTriggerMilitary();
+      if (milRes.ok) {
+        logs.push(`🪖 [영장 발부] 3학년 진입 전까지 미입대 상태여서 자동 입대했습니다! (${milRes.message})`);
+      }
+    }
+
     return {
       status: 'WEEK_DONE',
       activityResult,

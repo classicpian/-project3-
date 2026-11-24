@@ -9,9 +9,10 @@
     button { padding: 8px 12px; margin: 4px; cursor: pointer; border: 1px solid #334155; background: #1e293b; color: #fff; border-radius: 6px; font-size: 13px; }
     button:hover { background: #334155; }
     select { padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin: 4px; }
-    .log { font-size: 14px; line-height: 1.6; max-height: 260px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 6px; }
+    .log { font-size: 14px; line-height: 1.6; max-height: 260px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 6px; word-break: keep-all; }
     .advice { color: #0f766e; font-size: 14px; }
-    .item-desc { margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 6px; font-size: 12.5px; line-height: 1.6; color: #334155; }
+    .item-desc { margin-top: 10px; padding: 10px 12px; background: #f8fafc; border-radius: 6px; font-size: 12.5px; line-height: 1.7; color: #334155; word-break: keep-all; }
+    .cert-desc { margin-top: 6px; padding: 7px 10px; background: #eff6ff; border-left: 3px solid #2563eb; border-radius: 4px; font-size: 12.5px; color: #1e3a8a; word-break: keep-all; }
     #examBox { display: none; border: 2px solid #dc2626; }
   </style>
 </head>
@@ -34,31 +35,37 @@
 
   <div class="box">
     <strong>📌 주간 활동:</strong><br />
-    <button data-act="study" title="체력 -15 / 지능 +20 / 스트레스 +15">공부</button>
-    <button data-act="partTime" title="체력 -15 / 소지금 +60만 / 스트레스 +15">알바 (+60만)</button>
-    <button data-act="leisure" title="체력 +30 / 소지금 -10만 / 스트레스 -30">여가 (-10만)</button>
-    <button data-act="rest" title="체력 +20 / 스트레스 -15">휴식</button>
+    <button data-act="study">공부</button>
+    <button data-act="partTime">알바 (+60만)</button>
+    <button data-act="leisure">여가 (-10만)</button>
+    <button data-act="rest">휴식</button>
+    <div class="item-desc">
+      • <strong>공부:</strong> 체력 -15 / 지능 +20 / 스트레스 +15 &nbsp;|&nbsp;
+      • <strong>알바:</strong> 체력 -15 / 소지금 +60만 / 스트레스 +15<br />
+      • <strong>여가:</strong> 체력 +30 / 스트레스 -30 / 소지금 -10만 &nbsp;|&nbsp;
+      • <strong>휴식:</strong> 체력 +20 / 스트레스 -15 (무료)
+    </div>
   </div>
 
   <div class="box">
     <strong>⚡ 특수 이벤트 테스트:</strong><br />
-    <button id="btnMilitary">군대 입대 (남자 1회)</button>
+    <button id="btnMilitary">군대 입대 (남자 1회 / 3학년 전 미입대 시 자동 입대)</button>
     <button id="btnComp">대회/해커톤 참가</button>
   </div>
 
   <div class="box">
     <strong>🛒 상점 테스트:</strong><br />
-    <button data-buy="energy_drink" title="체력 +15, 스트레스 +10 (주 2회)">에너지 드링크 구매 (5천)</button>
-    <button data-use="energy_drink" title="체력 +15, 스트레스 +10">에너지 드링크 사용</button>
-    <button data-buy="iseul_cham" title="체력 -20, 스트레스 -30 (주 1회)">이슬(참) 구매 (3만)</button>
-    <button data-use="iseul_cham" title="체력 -20, 스트레스 -30">이슬(참) 사용</button>
-    <button data-buy="gpt_plus" title="4주간 월간 과제 100% 성공">GPT Plus (3만)</button>
-    <button data-buy="jokbo" title="다음 전공 시험 요구 지능 10 감소">족보 구매 (5만)</button>
+    <button data-buy="energy_drink">에너지 드링크 구매 (5천)</button>
+    <button data-use="energy_drink">에너지 드링크 사용</button>
+    <button data-buy="iseul_cham">이슬(참) 구매 (3만)</button>
+    <button data-use="iseul_cham">이슬(참) 사용</button>
+    <button data-buy="gpt_plus">GPT Plus (3만)</button>
+    <button data-buy="jokbo">족보 구매 (5만)</button>
     <br />
-    <button id="btn_gemini_sub" data-buy="gemini_sub" title="영구: 공부 시 지능 +20%">제미나이 영구 (30만)</button>
-    <button id="btn_living_set" data-buy="living_set" title="영구: 휴식 시 체력 +20%">자취 세트 (30만)</button>
-    <button id="btn_herman_miller" data-buy="herman_miller" title="영구: 체력 소모 -20%">허먼밀러 의자 (50만)</button>
-    <button id="btn_new_pc" data-buy="new_pc" title="영구: 공부 시 지능 +30%, 스트레스 -15%">최신형 컴퓨터 (120만)</button>
+    <button id="btn_gemini_sub" data-buy="gemini_sub">제미나이 영구 (30만)</button>
+    <button id="btn_living_set" data-buy="living_set">자취 세트 (30만)</button>
+    <button id="btn_herman_miller" data-buy="herman_miller">허먼밀러 의자 (50만)</button>
+    <button id="btn_new_pc" data-buy="new_pc">최신형 컴퓨터 (120만)</button>
     <br />
     <select id="certSelect">
       <option value="cert_sqld">[1학년~] SQLD (5만)</option>
@@ -73,13 +80,20 @@
       <option value="cert_security">[3학년~] 정보보안기사 (5만 / 스펙+2)</option>
     </select>
     <button id="btnBuyCert">선택 자격증 접수 (방학 전용)</button>
-    <button data-buy="toeic_ticket" title="방학 마지막 주 토익 실전 4문제 응시">토익 응시권 (5만 / 방학 전용)</button>
+    <button data-buy="toeic_ticket">토익 응시권 (5만 / 방학 전용)</button>
+
+    <div id="certDesc" class="cert-desc"></div>
 
     <div class="item-desc">
       <strong>📖 아이템 효과 안내 (영구 아이템은 2학년 1.25배 / 3학년 1.5배 / 4학년 2.0배 인플레이션 적용)</strong><br />
-      • <strong>에너지 드링크 (5천):</strong> 체력 +15, 스트레스 +10 (주 2회) | <strong>이슬(참) (3만):</strong> 체력 -20, 스트레스 -30 (주 1회)<br />
-      • <strong>GPT Plus (3만):</strong> 4주간 월간 과제 100% 성공 | <strong>족보 (5만):</strong> 다음 전공 시험 요구 지능 -10<br />
-      • <strong>제미나이 영구:</strong> 공부 지능 +20% | <strong>자취 세트:</strong> 휴식 체력 +20% | <strong>허먼밀러:</strong> 체력 소모 -20% | <strong>최신형 PC:</strong> 공부 지능 +30%, 스트레스 -15%<br />
+      • <strong>에너지 드링크 (5천):</strong> 체력 +15, 스트레스 +10 (주 2회) &nbsp;|&nbsp;
+        <strong>이슬(참) (3만):</strong> 체력 -20, 스트레스 -30 (주 1회)<br />
+      • <strong>GPT Plus (3만):</strong> 4주간 월간 과제 100% 성공 &nbsp;|&nbsp;
+        <strong>족보 (5만):</strong> 다음 전공 시험 요구 지능 -10<br />
+      • <strong>제미나이 영구:</strong> 공부 지능 +20% &nbsp;|&nbsp;
+        <strong>자취 세트:</strong> 휴식 체력 +20%<br />
+      • <strong>허먼밀러 의자:</strong> 모든 활동 체력 소모 -20% &nbsp;|&nbsp;
+        <strong>최신형 컴퓨터:</strong> 공부 지능 +30%, 스트레스 -15%<br />
       • <strong>자격증 10종 (5만):</strong> 방학 전용 — 다음 주 4문제 시험 (3문제 이상 합격 시 스펙 +1, 정보보안기사는 +2)<br />
       • <strong>토익 응시권 (5만):</strong> 방학 전용 — 방학 마지막 주 실전 토익 4문제 응시 (최고 점수 기록)
     </div>
@@ -99,6 +113,19 @@
   <script type="module">
     import { MYGameController } from './src/logic/MYGameController.js';
 
+    const CERT_DESCRIPTIONS = {
+      cert_sqld: 'SQLD (SQL 개발자): 데이터베이스 모델링과 SQL 작성 능력을 검증하는 컴공 입문 필수 자격증입니다.',
+      cert_adsp: 'ADsP (데이터분석 준전문가): 데이터 이해, 통계 기초, 데이터 마이닝 역량을 평가하는 분석 입문 자격증입니다.',
+      cert_linux2: '리눅스마스터 2급: 리눅스 기본 명령어, 파일 시스템, 프로세스 관리 등 서버 운영 기초를 다루는 자격증입니다.',
+      cert_net2: '네트워크관리사 2급: TCP/IP, 서브넷팅, 라우팅 및 네트워크 장비 기초 운용 능력을 검증합니다.',
+      cert_linux1: '리눅스마스터 1급: 서버 구축, 보안(SELinux/방화벽), LVM·RAID 등 실무 고급 리눅스 관리 자격증입니다.',
+      cert_aws_saa: 'AWS SAA: AWS 클라우드 아키텍처 설계, 고가용성·보안·비용 최적화 역량을 인증하는 글로벌 자격증입니다.',
+      cert_eip_ind: '정보처리산업기사: 소프트웨어 개발, DB, OS, 테스트 등 전산 전반의 실무 기초를 다루는 국가기술자격입니다.',
+      cert_eip: '정보처리기사: 소프트웨어 설계·구현·보안·DB 전반을 검증하는 컴공 취업의 대표 필수 국가기술자격입니다.',
+      cert_bigdata: '빅데이터분석기사: 빅데이터 수집·전처리·머신러닝 모델링 및 평가 역량을 검증하는 데이터 분야 기사 자격증입니다.',
+      cert_security: '정보보안기사: 시스템·네트워크·웹 보안 및 암호학·포렌식을 다루는 극악 난이도의 보안 끝판왕 자격증입니다. (스펙 +2)',
+    };
+
     const statusText = document.getElementById('statusText');
     const adviceBox = document.getElementById('adviceBox');
     const logBox = document.getElementById('logBox');
@@ -106,6 +133,17 @@
     const examTitle = document.getElementById('examTitle');
     const examQuestions = document.getElementById('examQuestions');
     const btnComp = document.getElementById('btnComp');
+    const certSelect = document.getElementById('certSelect');
+    const certDesc = document.getElementById('certDesc');
+
+    const esc = (s) =>
+      String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    function updateCertDesc() {
+      certDesc.textContent = `ℹ️ ${CERT_DESCRIPTIONS[certSelect.value] || ''}`;
+    }
+    certSelect.addEventListener('change', updateCertDesc);
+    updateCertDesc();
 
     function addLog(text) {
       const p = document.createElement('div');
@@ -164,10 +202,10 @@
         examTitle.textContent = examLabel;
         examQuestions.innerHTML = msg.exam.questions.map((q, idx) => `
           <div style="margin-bottom:10px;">
-            <div><strong>Q${idx + 1}. ${q.prompt}</strong></div>
+            <div><strong>Q${idx + 1}. ${esc(q.prompt)}</strong></div>
             ${q.options.map((opt, oIdx) => `
-              <label style="margin-right:10px;">
-                <input type="radio" name="q_${idx}" value="${oIdx}" /> ${opt}
+              <label style="margin-right:10px; display:inline-block;">
+                <input type="radio" name="q_${idx}" value="${oIdx}" /> ${esc(opt)}
               </label>
             `).join('')}
           </div>
@@ -212,8 +250,7 @@
     });
 
     document.getElementById('btnBuyCert').onclick = () => {
-      const certId = document.getElementById('certSelect').value;
-      controller.MYSendCommand('BUY', { itemId: certId });
+      controller.MYSendCommand('BUY', { itemId: certSelect.value });
     };
 
     document.getElementById('btnMilitary').onclick = () => {
