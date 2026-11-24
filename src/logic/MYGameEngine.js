@@ -86,6 +86,12 @@ export class MYGameEngine {
     if (this.pendingExam) {
       return { status: 'ERROR', reason: '진행 중인 시험을 먼저 제출해야 합니다.' };
     }
+    if (activityId === 'leisure' && this.player.money < 100000) {
+      return {
+        status: 'ERROR',
+        reason: '소지금이 부족해 여가를 즐길 수 없습니다. (필요: 100,000원 / 무료인 휴식을 이용해 주세요)',
+      };
+    }
 
     const date = this.calendar.MYGetDate();
     const schedule = this.calendar.MYGetSchedule();

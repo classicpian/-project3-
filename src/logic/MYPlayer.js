@@ -38,7 +38,7 @@ export class MYPlayer {
       this.stress = Math.max(0, Math.min(100, Math.round((this.stress + delta.stress) * 10) / 10));
     }
     if (typeof delta.money === 'number') {
-      this.money += Math.round(delta.money);
+      this.money = Math.max(0, this.money + Math.round(delta.money));
     }
   }
 
