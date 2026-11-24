@@ -66,6 +66,14 @@ export const MY_SHOP_ITEMS = {
     price: 1200000,
     type: 'permanent',
   },
+  ai_glasses: {
+    id: 'ai_glasses',
+    name: '👓 AI 안경 (히든)',
+    price: 1000000,
+    type: 'permanent',
+    isHidden: true,
+    fixedPrice: true, // 인플레이션 미적용 (100만 원 고정)
+  },
 
   // 4. 방학 전용 토익 응시권
   toeic_ticket: {
@@ -101,11 +109,11 @@ export class MYShopService {
     };
   }
 
-  // 학년별 인플레이션이 반영된 실제 가격 계산
+  // 학년별 인플레이션이 반영된 실제 가격 계산 (fixedPrice 아이템은 고정가)
   MYGetItemPrice(itemId, academicYear = 1) {
     const item = MY_SHOP_ITEMS[itemId];
     if (!item) return 0;
-    if (item.type === 'permanent') {
+    if (item.type === 'permanent' && !item.fixedPrice) {
       const rate = MY_INFLATION_RATES[academicYear] || 2.0;
       return Math.round(item.price * rate);
     }
@@ -129,7 +137,19 @@ export class MYShopService {
       return { ok: false, reason: '존재하지 않는 아이템입니다.' };
     }
 
-    const { isVacation = false, academicYear = 1, awards = [] } = context;
+    const {
+      isVacation = false,
+      academicYear = 1,
+      awards = [],
+      hiddenUnlocked = false,
+    } = context;
+
+    if (item.isHidden && !hiddenUnlocked) {
+      return {
+        ok: false,
+        reason: '엔딩을 1회 이상 달성해야 구매할 수 있는 히든 아이템입니다.',
+      };
+    }
 
     if (item.type === 'permanent' && this.permanentItems.includes(itemId)) {
       return { ok: false, reason: `이미 보유 중인 영구 아이템입니다: ${item.name}` };
@@ -174,6 +194,13 @@ export class MYShopService {
 
     if (item.type === 'permanent') {
       this.permanentItems.push(itemId);
+      if (itemId === 'ai_glasses') {
+        return {
+          ok: true,
+          item,
+          message: `👓 ${item.name} 구매 완료! 이제 모든 시험에서 정답이 보입니다. (단, 시험마다 10% 확률로 부정행위 적발 시 즉시 퇴학!)`,
+        };
+      }
       return {
         ok: true,
         item,

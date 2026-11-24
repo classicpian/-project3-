@@ -66,6 +66,9 @@
     <button id="btn_living_set" data-buy="living_set">자취 세트 (30만)</button>
     <button id="btn_herman_miller" data-buy="herman_miller">허먼밀러 의자 (50만)</button>
     <button id="btn_new_pc" data-buy="new_pc">최신형 컴퓨터 (120만)</button>
+    <button id="btn_ai_glasses" data-buy="ai_glasses" style="display:none; background:#7c3aed; border-color:#5b21b6;">
+      👓 [히든] AI 안경 (100만)
+    </button>
     <br />
     <select id="certSelect">
       <option value="cert_sqld">[1학년~] SQLD (5만)</option>
@@ -94,6 +97,7 @@
         <strong>자취 세트:</strong> 휴식 체력 +20%<br />
       • <strong>허먼밀러 의자:</strong> 모든 활동 체력 소모 -20% &nbsp;|&nbsp;
         <strong>최신형 컴퓨터:</strong> 공부 지능 +30%, 스트레스 -15%<br />
+      • <strong>👓 AI 안경 (히든 / 100만 고정):</strong> 엔딩 1회 달성 시 해금 — 모든 시험 정답 표시 (시험당 10% 부정행위 퇴학 리스크)<br />
       • <strong>자격증 10종 (5만):</strong> 방학 전용 — 다음 주 4문제 시험 (3문제 이상 합격 시 스펙 +1, 정보보안기사는 +2)<br />
       • <strong>토익 응시권 (5만):</strong> 방학 전용 — 방학 마지막 주 실전 토익 4문제 응시 (최고 점수 기록)
     </div>
@@ -112,6 +116,19 @@
 
   <script type="module">
     import { MYGameController } from './src/logic/MYGameController.js';
+
+    const CLEAR_KEY = 'MY_GAME_CLEARED';
+
+    function isHiddenUnlocked() {
+      return localStorage.getItem(CLEAR_KEY) === 'true';
+    }
+
+    function syncHiddenShopUI() {
+      document.getElementById('btn_ai_glasses').style.display = isHiddenUnlocked()
+        ? 'inline-block'
+        : 'none';
+    }
+    syncHiddenShopUI();
 
     const CERT_DESCRIPTIONS = {
       cert_sqld: 'SQLD (SQL 개발자): 데이터베이스 모델링과 SQL 작성 능력을 검증하는 컴공 입문 필수 자격증입니다.',
@@ -158,11 +175,12 @@
     function renderState(state, date) {
       if (!state || !state.player) return;
       const p = state.player;
+      const spoonTag = p.spoon ? `${p.spoon.label} | ` : '';
       const d = date ? `${date.academicYear}학년 ${date.month}월 ${date.weekInMonth}주 (${date.semesterId})` : '';
       const awardCount = state.awards ? state.awards.length : 0;
       const jokboTag = state.activeEffects?.jokboActive ? ' (족보 적용)' : '';
       const thresholdText = state.examThreshold !== undefined ? ` / 시험 요구: ${state.examThreshold}${jokboTag}` : '';
-      statusText.textContent = `${d} | 체력: ${p.health}/${p.maxHealth} | 지능: ${p.intelligence}${thresholdText} | 스트레스: ${p.stress} | 소지금: ${p.money.toLocaleString()}원 | 토익: ${p.toeicScore || 0}점 | 스펙: ${awardCount}개`;
+      statusText.textContent = `${spoonTag}${d} | 체력: ${p.health}/${p.maxHealth} | 지능: ${p.intelligence}${thresholdText} | 스트레스: ${p.stress} | 소지금: ${p.money.toLocaleString()}원 | 토익: ${p.toeicScore || 0}점 | 스펙: ${awardCount}개`;
 
       if (state.hackathonThreshold === null) {
         btnComp.textContent = '대회/해커톤 참가 (방학 불가)';
@@ -206,6 +224,7 @@
             ${q.options.map((opt, oIdx) => `
               <label style="margin-right:10px; display:inline-block;">
                 <input type="radio" name="q_${idx}" value="${oIdx}" /> ${esc(opt)}
+                ${q.aiAnswerIndex === oIdx ? '<strong style="color:#dc2626;"> 👓[AI 정답]</strong>' : ''}
               </label>
             `).join('')}
           </div>
@@ -217,7 +236,10 @@
         renderState(msg.state, msg.date);
         if (msg.result?.logs) msg.result.logs.forEach(addLog);
         if (msg.ended) {
+          localStorage.setItem(CLEAR_KEY, 'true');
+          syncHiddenShopUI();
           addLog('🏁 게임 종료! 엔딩: ' + msg.endings.map(e => e.title).join(', '));
+          addLog('✨ [히든 해금] 다음 회차부터 상점에서 "👓 AI 안경 (100만)"을 구매할 수 있습니다!');
         }
       },
       onAdvice: (tips) => {
@@ -242,7 +264,11 @@
     });
 
     document.querySelectorAll('[data-buy]').forEach((btn) => {
-      btn.onclick = () => controller.MYSendCommand('BUY', { itemId: btn.dataset.buy });
+      btn.onclick = () =>
+        controller.MYSendCommand('BUY', {
+          itemId: btn.dataset.buy,
+          hiddenUnlocked: isHiddenUnlocked(),
+        });
     });
 
     document.querySelectorAll('[data-use]').forEach((btn) => {
@@ -250,7 +276,10 @@
     });
 
     document.getElementById('btnBuyCert').onclick = () => {
-      controller.MYSendCommand('BUY', { itemId: certSelect.value });
+      controller.MYSendCommand('BUY', {
+        itemId: certSelect.value,
+        hiddenUnlocked: isHiddenUnlocked(),
+      });
     };
 
     document.getElementById('btnMilitary').onclick = () => {

@@ -1,44 +1,47 @@
 // src/logic/MYPlayer.js
 
+export const MY_SPOON_TYPES = {
+  diamond: { id: 'diamond', label: '💎 다이아 수저', desc: '학비·월세 전액 지원' },
+  gold: { id: 'gold', label: '🥇 금수저', desc: '월세 전액 지원' },
+  silver: { id: 'silver', label: '🥈 은수저', desc: '학비 전액 지원' },
+  dirt: { id: 'dirt', label: '🥉 흙수저', desc: '지원 없음 (자수성가)' },
+};
+
+function MYRollSpoon() {
+  const r = Math.random() * 100;
+  if (r < 5) return MY_SPOON_TYPES.diamond; // 5%
+  if (r < 20) return MY_SPOON_TYPES.gold;   // 15% (5~20)
+  if (r < 55) return MY_SPOON_TYPES.silver; // 35% (20~55)
+  return MY_SPOON_TYPES.dirt;               // 45% (55~100)
+}
+
 export class MYPlayer {
-  constructor(gender = 'male', initialMoney = 0) {
+  constructor(gender = 'male') {
     this.gender = gender;
     this.health = 100;
     this.maxHealth = 100;
     this.intelligence = 0;
     this.stress = 0;
-    this.money = initialMoney;
+    this.money = 0;
     this.toeicScore = 0;
-    this.isBrokenUp = false;
-    this.isMilitaryDone = false;
+    this.spoon = MYRollSpoon();
   }
 
-  // 스탯 변화량 적용 및 범위 보정
   MYApplyDelta(delta = {}) {
-    if (delta.maxHealth) {
-      this.maxHealth = Math.max(10, Math.round((this.maxHealth + delta.maxHealth) * 10) / 10);
+    if (typeof delta.health === 'number') {
+      this.health = Math.max(0, Math.min(this.maxHealth, Math.round((this.health + delta.health) * 10) / 10));
     }
-    if (delta.health) {
-      this.health = Math.min(
-        this.maxHealth,
-        Math.max(0, Math.round((this.health + delta.health) * 10) / 10)
-      );
+    if (typeof delta.intelligence === 'number') {
+      this.intelligence = Math.max(0, Math.round((this.intelligence + delta.intelligence) * 10) / 10);
     }
-    if (delta.intelligence) {
-      this.intelligence = Math.max(
-        0,
-        Math.round((this.intelligence + delta.intelligence) * 10) / 10
-      );
+    if (typeof delta.stress === 'number') {
+      this.stress = Math.max(0, Math.min(100, Math.round((this.stress + delta.stress) * 10) / 10));
     }
-    if (delta.stress) {
-      this.stress = Math.min(100, Math.max(0, Math.round((this.stress + delta.stress) * 10) / 10));
-    }
-    if (delta.money) {
-      this.money = Math.round(this.money + delta.money);
+    if (typeof delta.money === 'number') {
+      this.money += Math.round(delta.money);
     }
   }
 
-  // 현재 상태 스냅샷 반환
   MYGetState() {
     return {
       gender: this.gender,
@@ -48,8 +51,7 @@ export class MYPlayer {
       stress: this.stress,
       money: this.money,
       toeicScore: this.toeicScore,
-      isBrokenUp: this.isBrokenUp,
-      isMilitaryDone: this.isMilitaryDone,
+      spoon: this.spoon,
     };
   }
 }

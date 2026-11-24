@@ -117,6 +117,8 @@ export class MYGameEngine {
       logs.push(`[${selectedMode.label}] ${selectedMode.reason}`);
     }
 
+    const hasAiGlasses = this.shopService.permanentItems.includes('ai_glasses');
+
     // 2-1. 전공 시험
     if (schedule.includes('MIDTERM_EXAM') || schedule.includes('FINAL_EXAM')) {
       const examType = schedule.includes('MIDTERM_EXAM') ? 'mid' : 'final';
@@ -125,7 +127,8 @@ export class MYGameEngine {
         date.semesterId,
         examType,
         this.player.intelligence,
-        jokboUsed
+        jokboUsed,
+        hasAiGlasses
       );
       if (jokboUsed) {
         this.shopService.activeEffects.jokboActive = false;
@@ -141,7 +144,7 @@ export class MYGameEngine {
       const certId = this.shopService.activeEffects.pendingCertId;
       this.shopService.activeEffects.pendingCertId = null;
       const certName = MY_SHOP_ITEMS[certId]?.name || certId;
-      const examData = this.examService.MYBuildCertExam(certId, certName);
+      const examData = this.examService.MYBuildCertExam(certId, certName, hasAiGlasses);
       logs.push(`[${certName}] 자격증 시험에 응시합니다. (4문제 중 3문제 이상 합격)`);
       this.pendingExam = { examData, activityResult, logs, date, schedule };
       return { status: 'WAIT_EXAM', exam: examData, logs };
@@ -158,7 +161,8 @@ export class MYGameEngine {
         targetSemesterId,
         'toeic',
         this.player.intelligence,
-        false
+        false,
+        hasAiGlasses
       );
       logs.push('방학 마지막 주 토익 시험에 응시합니다.');
       this.pendingExam = { examData, activityResult, logs, date, schedule };
@@ -176,6 +180,25 @@ export class MYGameEngine {
     const { activityResult, logs, date, schedule } = this.pendingExam;
     const submitRes = this.examService.MYSubmitAnswers(answers);
     if (!submitRes.ok) return { status: 'ERROR', reason: submitRes.reason };
+
+    // AI 안경 착용 시 10% 확률로 부정행위 적발 -> 즉시 퇴학 엔딩
+    if (this.shopService.permanentItems.includes('ai_glasses') && Math.random() < 0.1) {
+      this.pendingExam = null;
+      this.endingCandidates = [
+        {
+          id: 'EXPELLED_CHEATING',
+          title: '🚨 부정행위 적발 (퇴학 엔딩)',
+          description: 'AI 안경을 착용하고 시험을 치르다 감독관에게 적발되어 즉시 퇴학 처리되었습니다.',
+        },
+      ];
+      logs.push('🚨 [부정행위 적발] AI 안경 사용이 감독관에게 발각되어 퇴학 처리되었습니다!');
+      return {
+        status: 'ENDED',
+        endings: this.endingCandidates,
+        player: this.player.MYGetState(),
+        logs,
+      };
+    }
 
     // 문항별 정답 및 한 줄 해설 로그 추가
     if (submitRes.reviews) {
@@ -269,7 +292,9 @@ export class MYGameEngine {
       if (rentRes.isBankrupt) {
         return this.MYFinishGame(true, rentRes.reason);
       }
-      if (!rentRes.alreadyPaid) {
+      if (rentRes.supportedBySpoon) {
+        logs.push(`${this.player.spoon.label} 혜택으로 이번 달 월세가 전액 지원되었습니다! (0원)`);
+      } else if (!rentRes.alreadyPaid) {
         logs.push(`월세 ${rentRes.paidAmount.toLocaleString()}원 납부 완료`);
       }
     }
@@ -294,7 +319,11 @@ export class MYGameEngine {
       if (tuitionRes.isBankrupt) {
         return this.MYFinishGame(true, tuitionRes.reason);
       }
-      if (!tuitionRes.alreadyPaid) {
+      if (tuitionRes.supportedBySpoon) {
+        logs.push(
+          `[${nextDate.semesterId} 학기 시작] ${this.player.spoon.label} 혜택으로 학비가 전액 지원되었습니다! (0원)`
+        );
+      } else if (!tuitionRes.alreadyPaid) {
         logs.push(
           `[${nextDate.semesterId} 학기 시작] 학비 ${tuitionRes.paidAmount.toLocaleString()}원 자동 납부 (장학금 ${tuitionRes.scholarship.toLocaleString()}원 감면)`
         );
