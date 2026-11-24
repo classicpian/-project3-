@@ -80,7 +80,7 @@ export class MYGameController {
       return;
     }
 
-    if (msg.type === 'WAIT' && msg.kind === 'EXAM') {
+    if (msg.type === 'WAIT_EXAM' || (msg.type === 'WAIT' && msg.kind === 'EXAM')) {
       this.callbacks.onWaitExam?.(msg);
       return;
     }

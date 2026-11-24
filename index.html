@@ -8,8 +8,8 @@
     .box { background: #fff; padding: 16px; border-radius: 8px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
     button { padding: 8px 12px; margin: 4px; cursor: pointer; border: 1px solid #334155; background: #1e293b; color: #fff; border-radius: 6px; font-size: 13px; }
     button:hover { background: #334155; }
-    select { padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; }
-    .log { font-size: 14px; line-height: 1.6; max-height: 220px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 6px; }
+    select { padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin: 4px; }
+    .log { font-size: 14px; line-height: 1.6; max-height: 260px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 6px; }
     .advice { color: #0f766e; font-size: 14px; }
     .item-desc { margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 6px; font-size: 12.5px; line-height: 1.6; color: #334155; }
     #examBox { display: none; border: 2px solid #dc2626; }
@@ -34,10 +34,10 @@
 
   <div class="box">
     <strong>📌 주간 활동:</strong><br />
-    <button data-act="study" title="체력 -10 / 지능 +20 / 스트레스 +10">공부</button>
-    <button data-act="partTime" title="체력 -10 / 소지금 +60만 / 스트레스 +10">알바 (+60만)</button>
-    <button data-act="leisure" title="체력 +40 / 소지금 -10만 / 스트레스 -40">여가 (-10만)</button>
-    <button data-act="rest" title="체력 +30 / 스트레스 -20">휴식</button>
+    <button data-act="study" title="체력 -15 / 지능 +20 / 스트레스 +15">공부</button>
+    <button data-act="partTime" title="체력 -15 / 소지금 +60만 / 스트레스 +15">알바 (+60만)</button>
+    <button data-act="leisure" title="체력 +30 / 소지금 -10만 / 스트레스 -30">여가 (-10만)</button>
+    <button data-act="rest" title="체력 +20 / 스트레스 -15">휴식</button>
   </div>
 
   <div class="box">
@@ -48,33 +48,40 @@
 
   <div class="box">
     <strong>🛒 상점 테스트:</strong><br />
-    <button data-buy="energy_drink" title="사용 시 체력 +15, 스트레스 +10 (주 2회)">에너지 드링크 구매 (5천)</button>
+    <button data-buy="energy_drink" title="체력 +15, 스트레스 +10 (주 2회)">에너지 드링크 구매 (5천)</button>
     <button data-use="energy_drink" title="체력 +15, 스트레스 +10">에너지 드링크 사용</button>
-    <button data-buy="iseul_cham" title="사용 시 체력 -25, 스트레스 -30 (주 1회)">이슬(참) 구매 (3만)</button>
-    <button data-use="iseul_cham" title="체력 -25, 스트레스 -30">이슬(참) 사용</button>
-    <button data-buy="gpt_plus" title="4주간 월간 과제 100% 자동 성공">GPT Plus (3만)</button>
-    <button data-buy="jokbo" title="다음 전공 시험 요구 지능 10 감소 (1회성)">족보 구매 (5만)</button>
+    <button data-buy="iseul_cham" title="체력 -20, 스트레스 -30 (주 1회)">이슬(참) 구매 (3만)</button>
+    <button data-use="iseul_cham" title="체력 -20, 스트레스 -30">이슬(참) 사용</button>
+    <button data-buy="gpt_plus" title="4주간 월간 과제 100% 성공">GPT Plus (3만)</button>
+    <button data-buy="jokbo" title="다음 전공 시험 요구 지능 10 감소">족보 구매 (5만)</button>
     <br />
-    <button data-buy="gemini_sub" title="영구: 공부 시 지능 획득량 +20%">제미나이 영구 (30만)</button>
-    <button data-buy="living_set" title="영구: 휴식 시 체력 회복량 +20%">자취 세트 (30만)</button>
-    <button data-buy="herman_miller" title="영구: 모든 활동 체력 소모량 -20%">허먼밀러 의자 (50만)</button>
-    <button data-buy="new_pc" title="영구: 공부 시 지능 +30%, 스트레스 -15%">최신형 컴퓨터 (120만)</button>
+    <button id="btn_gemini_sub" data-buy="gemini_sub" title="영구: 공부 시 지능 +20%">제미나이 영구 (30만)</button>
+    <button id="btn_living_set" data-buy="living_set" title="영구: 휴식 시 체력 +20%">자취 세트 (30만)</button>
+    <button id="btn_herman_miller" data-buy="herman_miller" title="영구: 체력 소모 -20%">허먼밀러 의자 (50만)</button>
+    <button id="btn_new_pc" data-buy="new_pc" title="영구: 공부 시 지능 +30%, 스트레스 -15%">최신형 컴퓨터 (120만)</button>
     <br />
-    <button data-buy="cert_ticket" title="방학 전용: 다음 주 자격증 합격 판정 (지능 / (다음 시험 요구 지능 + 50))">자격증 접수권 (5만 / 방학 전용)</button>
-    <button data-buy="toeic_ticket" title="방학 전용: 방학 마지막 주 토익 시험 응시">토익 응시권 (5만 / 방학 전용)</button>
+    <select id="certSelect">
+      <option value="cert_sqld">[1학년~] SQLD (5만)</option>
+      <option value="cert_adsp">[1학년~] ADsP (5만)</option>
+      <option value="cert_linux2">[1학년~] 리눅스마스터 2급 (5만)</option>
+      <option value="cert_net2">[1학년~] 네트워크관리사 2급 (5만)</option>
+      <option value="cert_linux1">[2학년~] 리눅스마스터 1급 (5만)</option>
+      <option value="cert_aws_saa">[2학년~] AWS SAA (5만)</option>
+      <option value="cert_eip_ind">[2학년~] 정보처리산업기사 (5만)</option>
+      <option value="cert_eip">[3학년~] 정보처리기사 (5만)</option>
+      <option value="cert_bigdata">[3학년~] 빅데이터분석기사 (5만)</option>
+      <option value="cert_security">[3학년~] 정보보안기사 (5만 / 스펙+2)</option>
+    </select>
+    <button id="btnBuyCert">선택 자격증 접수 (방학 전용)</button>
+    <button data-buy="toeic_ticket" title="방학 마지막 주 토익 실전 4문제 응시">토익 응시권 (5만 / 방학 전용)</button>
 
     <div class="item-desc">
-      <strong>📖 아이템 효과 안내</strong><br />
-      • <strong>에너지 드링크 (5천):</strong> 사용 시 체력 +15, 스트레스 +10 (주당 2회 제한)<br />
-      • <strong>이슬(참) (3만):</strong> 사용 시 체력 -25, 스트레스 -30 (주당 1회 제한)<br />
-      • <strong>GPT Plus (3만):</strong> 구매 후 4주간 매달 4주차 과제 100% 성공 (+25점)<br />
-      • <strong>족보 (5만):</strong> 다음 전공 시험(중간·기말) 요구 지능 -10 감소 (1회 소모)<br />
-      • <strong>제미나이 영구 구독 (30만):</strong> 영구 패시브 — 공부 시 지능 획득량 +20%<br />
-      • <strong>자취 세트 (30만):</strong> 영구 패시브 — 휴식 시 체력 회복량 +20%<br />
-      • <strong>허먼밀러 의자 (50만):</strong> 영구 패시브 — 모든 활동의 체력 소모량 -20%<br />
-      • <strong>최신형 컴퓨터 (120만):</strong> 영구 패시브 — 공부 시 지능 +30%, 스트레스 -15%<br />
-      • <strong>자격증 접수권 (5만):</strong> 방학 전용 — 다음 주 합격 판정 (성공 시 취업 스펙 +1)<br />
-      • <strong>토익 응시권 (5만):</strong> 방학 전용 — 방학 마지막 주(8월·2월 4주) 토익 시험 응시
+      <strong>📖 아이템 효과 안내 (영구 아이템은 2학년 1.25배 / 3학년 1.5배 / 4학년 2.0배 인플레이션 적용)</strong><br />
+      • <strong>에너지 드링크 (5천):</strong> 체력 +15, 스트레스 +10 (주 2회) | <strong>이슬(참) (3만):</strong> 체력 -20, 스트레스 -30 (주 1회)<br />
+      • <strong>GPT Plus (3만):</strong> 4주간 월간 과제 100% 성공 | <strong>족보 (5만):</strong> 다음 전공 시험 요구 지능 -10<br />
+      • <strong>제미나이 영구:</strong> 공부 지능 +20% | <strong>자취 세트:</strong> 휴식 체력 +20% | <strong>허먼밀러:</strong> 체력 소모 -20% | <strong>최신형 PC:</strong> 공부 지능 +30%, 스트레스 -15%<br />
+      • <strong>자격증 10종 (5만):</strong> 방학 전용 — 다음 주 4문제 시험 (3문제 이상 합격 시 스펙 +1, 정보보안기사는 +2)<br />
+      • <strong>토익 응시권 (5만):</strong> 방학 전용 — 방학 마지막 주 실전 토익 4문제 응시 (최고 점수 기록)
     </div>
   </div>
 
@@ -106,6 +113,10 @@
       logBox.prepend(p);
     }
 
+    function formatMan(price) {
+      return `${(price / 10000).toLocaleString()}만`;
+    }
+
     function renderState(state, date) {
       if (!state || !state.player) return;
       const p = state.player;
@@ -113,12 +124,19 @@
       const awardCount = state.awards ? state.awards.length : 0;
       const jokboTag = state.activeEffects?.jokboActive ? ' (족보 적용)' : '';
       const thresholdText = state.examThreshold !== undefined ? ` / 시험 요구: ${state.examThreshold}${jokboTag}` : '';
-      statusText.textContent = `${d} | 체력: ${p.health}/${p.maxHealth} | 지능: ${p.intelligence}${thresholdText} | 스트레스: ${p.stress} | 소지금: ${p.money.toLocaleString()}원 | 토익: ${p.toeicScore || 0}점 | 수상/자격증: ${awardCount}개`;
+      statusText.textContent = `${d} | 체력: ${p.health}/${p.maxHealth} | 지능: ${p.intelligence}${thresholdText} | 스트레스: ${p.stress} | 소지금: ${p.money.toLocaleString()}원 | 토익: ${p.toeicScore || 0}점 | 스펙: ${awardCount}개`;
 
       if (state.hackathonThreshold === null) {
         btnComp.textContent = '대회/해커톤 참가 (방학 불가)';
       } else if (state.hackathonThreshold !== undefined) {
         btnComp.textContent = `대회/해커톤 참가 (요구 지능 ${state.hackathonThreshold})`;
+      }
+
+      if (state.permanentPrices) {
+        document.getElementById('btn_gemini_sub').textContent = `제미나이 영구 (${formatMan(state.permanentPrices.gemini_sub)})`;
+        document.getElementById('btn_living_set').textContent = `자취 세트 (${formatMan(state.permanentPrices.living_set)})`;
+        document.getElementById('btn_herman_miller').textContent = `허먼밀러 의자 (${formatMan(state.permanentPrices.herman_miller)})`;
+        document.getElementById('btn_new_pc').textContent = `최신형 컴퓨터 (${formatMan(state.permanentPrices.new_pc)})`;
       }
     }
 
@@ -135,11 +153,15 @@
       },
       onWaitExam: (msg) => {
         examBox.style.display = 'block';
-        const examLabel =
-          msg.exam.examType === 'toeic'
-            ? '방학 토익 시험'
-            : `${msg.exam.semesterId} ${msg.exam.examType === 'mid' ? '중간고사' : '기말고사'}`;
-        examTitle.textContent = `${examLabel} (난이도: ${msg.exam.difficulty}, 요구 지능: ${msg.exam.threshold})`;
+        let examLabel = '';
+        if (msg.exam.examType === 'toeic') {
+          examLabel = '방학 토익 시험 (실전 랜덤 4문제)';
+        } else if (msg.exam.examType === 'cert') {
+          examLabel = `[${msg.exam.certName}] 자격증 시험 (3문제 이상 합격)`;
+        } else {
+          examLabel = `${msg.exam.semesterId} ${msg.exam.examType === 'mid' ? '중간고사' : '기말고사'} (난이도: ${msg.exam.difficulty}, 요구 지능: ${msg.exam.threshold})`;
+        }
+        examTitle.textContent = examLabel;
         examQuestions.innerHTML = msg.exam.questions.map((q, idx) => `
           <div style="margin-bottom:10px;">
             <div><strong>Q${idx + 1}. ${q.prompt}</strong></div>
@@ -188,6 +210,11 @@
     document.querySelectorAll('[data-use]').forEach((btn) => {
       btn.onclick = () => controller.MYSendCommand('USE_ITEM', { itemId: btn.dataset.use });
     });
+
+    document.getElementById('btnBuyCert').onclick = () => {
+      const certId = document.getElementById('certSelect').value;
+      controller.MYSendCommand('BUY', { itemId: certId });
+    };
 
     document.getElementById('btnMilitary').onclick = () => {
       controller.MYSendCommand('MILITARY');

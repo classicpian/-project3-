@@ -4,7 +4,7 @@ import { MYPlayer } from './MYPlayer.js';
 import { MYCalendar } from './MYCalendar.js';
 import { MYTraitPolicy } from './MYTraitPolicy.js';
 import { MYActivityService } from './MYActivityService.js';
-import { MYShopService } from './MYShopService.js';
+import { MYShopService, MY_SHOP_ITEMS } from './MYShopService.js';
 import { MYEconomyService } from './MYEconomyService.js';
 import { MYExamService, MY_EXAM_THRESHOLDS } from './MYExamService.js';
 import { MYAssignmentService } from './MYAssignmentService.js';
@@ -24,13 +24,12 @@ export class MYGameEngine {
     this.eventService = new MYEventService();
     this.endingService = new MYEndingService();
 
-    this.restrictedNextWeek = false; // 과로로 인한 강제 휴식 여부
-    this.pendingExam = null;         // 시험 입력 대기 상태
-    this.currentMidScore = 0;        // 이번 학기 중간고사 점수 임시 보관
-    this.endingCandidates = null;    // 종료 시 엔딩 후보
+    this.restrictedNextWeek = false;
+    this.pendingExam = null;
+    this.currentMidScore = 0;
+    this.endingCandidates = null;
   }
 
-  // 현재(또는 방학 중 다음) 시험 정보 계산
   MYGetNextExamInfo(date = this.calendar.MYGetDate()) {
     let semesterId = date.semesterId;
     let examType = 'mid';
@@ -43,7 +42,6 @@ export class MYGameEngine {
       }
       examType = 'mid';
     } else {
-      // 3~4월, 9~10월은 중간고사 기준 / 5~6월, 11~12월은 기말고사 기준
       examType =
         date.month === 3 || date.month === 4 || date.month === 9 || date.month === 10
           ? 'mid'
@@ -56,18 +54,16 @@ export class MYGameEngine {
     return { semesterId, examType, baseThreshold };
   }
 
-  // 직전 시험 요구 지능 계산 (월간 과제 성공률 판정용)
   MYGetPrevExamThreshold(date = this.calendar.MYGetDate()) {
     const { semesterId, examType } = this.MYGetNextExamInfo(date);
     if (semesterId === '1-1' && examType === 'mid') {
-      return 0; // 1학년 1학기 중간고사 전까지는 성공률 100%
+      return 0;
     }
 
     if (examType === 'final') {
       return MY_EXAM_THRESHOLDS[semesterId]?.mid || 0;
     }
 
-    // 현재 중간고사 기준일 경우 직전 학기 기말고사 요구 지능 반환
     const [yearStr, termStr] = semesterId.split('-');
     const year = Number(yearStr);
     const term = Number(termStr);
@@ -75,7 +71,6 @@ export class MYGameEngine {
     return MY_EXAM_THRESHOLDS[prevSemesterId]?.final || 0;
   }
 
-  // 현재(또는 다음) 시험 요구 지능 계산 (족보 효과 반영)
   MYGetTargetExamThreshold() {
     let { baseThreshold } = this.MYGetNextExamInfo();
     if (this.shopService.activeEffects.jokboActive) {
@@ -84,7 +79,6 @@ export class MYGameEngine {
     return baseThreshold;
   }
 
-  // 주간 실행 (활동 선택 시 호출)
   MYRunWeek(activityId) {
     if (this.endingCandidates) {
       return { status: 'ENDED', endings: this.endingCandidates };
@@ -97,7 +91,6 @@ export class MYGameEngine {
     const schedule = this.calendar.MYGetSchedule();
     const logs = [];
 
-    // 1. 일반 활동 처리 (과로 상태면 강제 회복)
     let activityResult = null;
     if (this.restrictedNextWeek) {
       this.restrictedNextWeek = false;
@@ -124,7 +117,7 @@ export class MYGameEngine {
       logs.push(`[${selectedMode.label}] ${selectedMode.reason}`);
     }
 
-    // 2-1. 전공 시험 주차 확인 -> 시험이 있으면 WAIT_EXAM 상태로 일시 정지
+    // 2-1. 전공 시험
     if (schedule.includes('MIDTERM_EXAM') || schedule.includes('FINAL_EXAM')) {
       const examType = schedule.includes('MIDTERM_EXAM') ? 'mid' : 'final';
       const jokboUsed = this.shopService.activeEffects.jokboActive;
@@ -135,7 +128,7 @@ export class MYGameEngine {
         jokboUsed
       );
       if (jokboUsed) {
-        this.shopService.activeEffects.jokboActive = false; // 족보 1회 소멸
+        this.shopService.activeEffects.jokboActive = false;
         logs.push('족보 효과가 적용되어 시험 요구 지능이 10 감소했습니다.');
       }
 
@@ -143,7 +136,18 @@ export class MYGameEngine {
       return { status: 'WAIT_EXAM', exam: examData, logs };
     }
 
-    // 2-2. 방학 마지막 주(8월 4주 / 2월 4주) + 토익 응시권 보유 시 토익 시험 진행
+    // 2-2. 접수해 둔 자격증 시험 진행
+    if (this.shopService.activeEffects.pendingCertId) {
+      const certId = this.shopService.activeEffects.pendingCertId;
+      this.shopService.activeEffects.pendingCertId = null;
+      const certName = MY_SHOP_ITEMS[certId]?.name || certId;
+      const examData = this.examService.MYBuildCertExam(certId, certName);
+      logs.push(`[${certName}] 자격증 시험에 응시합니다. (4문제 중 3문제 이상 합격)`);
+      this.pendingExam = { examData, activityResult, logs, date, schedule };
+      return { status: 'WAIT_EXAM', exam: examData, logs };
+    }
+
+    // 2-3. 방학 마지막 주 토익 시험 진행
     const isVacationLastWeek =
       date.isVacation && (date.month === 8 || date.month === 2) && date.weekInMonth === 4;
 
@@ -156,16 +160,14 @@ export class MYGameEngine {
         this.player.intelligence,
         false
       );
-      logs.push(`방학 마지막 주 토익 시험에 응시합니다. (요구 지능: ${examData.threshold})`);
+      logs.push('방학 마지막 주 토익 시험에 응시합니다.');
       this.pendingExam = { examData, activityResult, logs, date, schedule };
       return { status: 'WAIT_EXAM', exam: examData, logs };
     }
 
-    // 시험이 없으면 바로 주간 마무리로 진행
     return this.MYCompleteWeek(activityResult, logs, date, schedule);
   }
 
-  // 시험 답안 제출 후 주간 진행 재개
   MYSubmitExam(answers) {
     if (!this.pendingExam) {
       return { status: 'ERROR', reason: '제출할 시험이 없습니다.' };
@@ -175,7 +177,34 @@ export class MYGameEngine {
     const submitRes = this.examService.MYSubmitAnswers(answers);
     if (!submitRes.ok) return { status: 'ERROR', reason: submitRes.reason };
 
-    if (submitRes.examType === 'toeic') {
+    // 문항별 정답 및 한 줄 해설 로그 추가
+    if (submitRes.reviews) {
+      submitRes.reviews.forEach((r) => {
+        const mark = r.isCorrect ? '✅' : '❌';
+        const expText = r.explanation ? ` — ${r.explanation}` : '';
+        logs.push(`Q${r.index} ${mark} (정답: ${r.correctOption})${expText}`);
+      });
+    }
+
+    if (submitRes.examType === 'cert') {
+      if (submitRes.passed) {
+        this.eventService.awards.push(submitRes.certId);
+        if (submitRes.certId === 'cert_security') {
+          this.eventService.awards.push('cert_security_bonus');
+          logs.push(
+            `🎉 [${submitRes.certName}] 합격! (${submitRes.correctCount}/4 정답, 끝판왕 자격증 보너스 스펙 +2)`
+          );
+        } else {
+          logs.push(
+            `🎉 [${submitRes.certName}] 합격! (${submitRes.correctCount}/4 정답, 취업 스펙 +1)`
+          );
+        }
+      } else {
+        logs.push(
+          `😥 [${submitRes.certName}] 불합격 (${submitRes.correctCount}/4 정답 — 3문제 이상 필요)`
+        );
+      }
+    } else if (submitRes.examType === 'toeic') {
       const prevScore = this.player.toeicScore || 0;
       if (submitRes.score > prevScore) {
         this.player.toeicScore = submitRes.score;
@@ -189,7 +218,6 @@ export class MYGameEngine {
     } else {
       logs.push(`기말고사 완료: ${submitRes.score}점 (${submitRes.correctCount}/4 정답)`);
 
-      // 기말고사 주차(6월 4주 / 12월 4주) 마지막 월간 과제 판정 후 학기 성적 산출
       const prevThreshold = this.MYGetPrevExamThreshold(date);
       const hasGpt = this.shopService.activeEffects.gptPlusWeeksLeft > 0;
       const assignRes = this.assignmentService.MYEvaluateMonthly(
@@ -212,9 +240,7 @@ export class MYGameEngine {
     return this.MYCompleteWeek(activityResult, logs, date, schedule);
   }
 
-  // 월간 과제·자격증 판정·돌발 이벤트·월세 정산·주차 이동 및 새 학기 시작 정산(학비)
   MYCompleteWeek(activityResult, logs, date, schedule) {
-    // 3-1. 학기 중 매달 4주차(기말고사 주 제외) 월간 과제 판정
     if (!date.isVacation && date.weekInMonth === 4 && !schedule.includes('FINAL_EXAM')) {
       const prevThreshold = this.MYGetPrevExamThreshold(date);
       const hasGpt = this.shopService.activeEffects.gptPlusWeeksLeft > 0;
@@ -226,26 +252,6 @@ export class MYGameEngine {
       logs.push(assignRes.message);
     }
 
-    // 3-2. 자격증 응시 대기 중이면 이번 주에 합격 판정 (현재 지능 / (다음 시험 요구 지능 + 50))
-    if (this.shopService.activeEffects.certPending) {
-      this.shopService.activeEffects.certPending = false;
-      const { baseThreshold } = this.MYGetNextExamInfo(date);
-      const certTarget = baseThreshold + 50;
-      const passProb = Math.min(1, this.player.intelligence / certTarget);
-
-      if (Math.random() < passProb) {
-        this.eventService.awards.push('CERT');
-        logs.push(
-          `🎉 자격증 시험에 합격했습니다! (합격 확률 ${Math.round(passProb * 100)}%, 취업 스펙 추가)`
-        );
-      } else {
-        logs.push(
-          `😥 자격증 시험에서 아쉽게 불합격했습니다. (합격 확률 ${Math.round(passProb * 100)}%)`
-        );
-      }
-    }
-
-    // 4. 돌발 이벤트 (과로, 이별)
     const overwork = this.eventService.MYCheckOverwork(this.player);
     if (overwork.triggered) {
       this.restrictedNextWeek = true;
@@ -257,7 +263,6 @@ export class MYGameEngine {
       logs.push(breakup.message);
     }
 
-    // 5. 월말 월세 납부
     if (schedule.includes('RENT_DUE')) {
       const yearMonthKey = `${date.academicYear}-${date.month}`;
       const rentRes = this.economyService.MYPayRent(this.player, yearMonthKey);
@@ -269,7 +274,6 @@ export class MYGameEngine {
       }
     }
 
-    // 6. 주간 제한 초기화 및 다음 주로 이동
     this.shopService.MYResetWeeklyLimits();
     const nextDate = this.calendar.MYAdvance();
 
@@ -277,7 +281,6 @@ export class MYGameEngine {
       return this.MYFinishGame(false);
     }
 
-    // 7. 새 학기 첫 주(9월 1주 / 3월 1주)에 진입하는 순간 학비 자동 납부 및 과제 점수 초기화
     const isNewSemesterStart =
       (nextDate.month === 3 || nextDate.month === 9) && nextDate.weekInMonth === 1;
 
@@ -307,13 +310,11 @@ export class MYGameEngine {
     };
   }
 
-  // 군대 이벤트 실행 (남성 캐릭터 자율 선택)
   MYTriggerMilitary() {
     if (this.endingCandidates) return { ok: false, reason: '이미 종료된 게임입니다.' };
     return this.eventService.MYApplyMilitary(this.player);
   }
 
-  // 대회/해커톤 참가 및 결과 판정 (방학 불가, 요구 지능 = 다음 시험 요구치 + 50)
   MYRunCompetition(compId = 'HACKATHON') {
     if (this.endingCandidates) return { ok: false, reason: '이미 종료된 게임입니다.' };
 
@@ -332,7 +333,6 @@ export class MYGameEngine {
     return { ok: true, requiredIntelligence, ...res };
   }
 
-  // 게임 종료 및 엔딩 계산
   MYFinishGame(isBankrupt, bankruptReason = '') {
     this.endingCandidates = this.endingService.MYEvaluateEndings({
       gpa: this.examService.MYGetCumulativeGPA(),
@@ -344,7 +344,6 @@ export class MYGameEngine {
     return { status: 'ENDED', endings: this.endingCandidates, player: this.player.MYGetState() };
   }
 
-  // 저장용 스냅샷 추출
   MYExportState() {
     const date = this.calendar.MYGetDate();
     const { baseThreshold } = this.MYGetNextExamInfo(date);
@@ -354,6 +353,7 @@ export class MYGameEngine {
       player: this.player.MYGetState(),
       examThreshold: this.MYGetTargetExamThreshold(),
       hackathonThreshold: date.isVacation ? null : baseThreshold + 50,
+      permanentPrices: this.shopService.MYGetPermanentPriceMap(date.academicYear),
       assignmentScore: this.assignmentService.MYGetSemesterScore(),
       restrictedNextWeek: this.restrictedNextWeek,
       currentMidScore: this.currentMidScore,
