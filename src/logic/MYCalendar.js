@@ -1,9 +1,14 @@
 // src/logic/MYCalendar.js
 
+export function MYCalendarYearForTurn(turn,militaryLeave=null){
+ const position=Math.min(191,Math.max(0,turn)),month=((Math.floor(position/4)+2)%12)+1;
+ return 2026+Math.floor(position/48)+(month<3?1:0)+(militaryLeave&&position>=militaryLeave.week?militaryLeave.years:0);
+}
 export class MYCalendar {
   constructor(elapsedWeek = 0) {
     this.elapsedWeek = elapsedWeek; // 완료한 주 수 (0 ~ 192)
     this.MAX_WEEKS = 192; // 4년 * 12개월 * 4주
+    this.militaryLeave=null;
   }
 
   // 현재 날짜 정보 계산[cite: 45]
@@ -16,6 +21,7 @@ export class MYCalendar {
         weekInMonth: 4,
         semesterId: 'GRADUATED',
         isVacation: false,
+        calendarYear:MYCalendarYearForTurn(this.elapsedWeek,this.militaryLeave),
       };
     }
 
@@ -45,6 +51,7 @@ export class MYCalendar {
       weekInMonth,
       semesterId,
       isVacation,
+      calendarYear:MYCalendarYearForTurn(this.elapsedWeek,this.militaryLeave),
     };
   }
 

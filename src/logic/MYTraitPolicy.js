@@ -15,7 +15,7 @@ export class MYTraitPolicy {
 
     if (activityId === 'study') {
       candidates.push({
-        modeId: 'balanced',
+        modeId: 'balanced_study',
         label: '균형 학습',
         score: 10,
         reason: '전반적인 상태가 안정적이어서 균형 있게 공부했습니다.',
@@ -28,7 +28,7 @@ export class MYTraitPolicy {
           score += 25;
           reason = '과제 마감이 가까워 과제를 우선했습니다.';
         }
-        candidates.push({ modeId: 'assignment_first', label: '과제 우선', score, reason });
+        candidates.push({ modeId: 'assignment_focus', label: '과제 우선', score, reason });
       }
 
       const reviewScore = weeksToExam <= 2 ? 20 : 5;
@@ -37,7 +37,7 @@ export class MYTraitPolicy {
           ? '시험이 임박하여 꼼꼼하게 복습했습니다.'
           : '완벽한 이해를 위해 꼼꼼하게 복습했습니다.';
       candidates.push({
-        modeId: 'thorough_review',
+        modeId: 'deep_review',
         label: '꼼꼼한 복습',
         score: reviewScore,
         reason: reviewReason,
@@ -54,7 +54,7 @@ export class MYTraitPolicy {
         easyReason = '스트레스가 높아 쉬어가며 공부했습니다.';
       }
       candidates.push({
-        modeId: 'easy_study',
+        modeId: 'light_study',
         label: '쉬어가며 공부',
         score: easyScore,
         reason: easyReason,
@@ -78,7 +78,7 @@ export class MYTraitPolicy {
         pacedReason = '스트레스가 높아 강도를 조절하며 일했습니다.';
       }
       candidates.push({
-        modeId: 'paced_work',
+        modeId: 'safe_work',
         label: '강도 조절 알바',
         score: pacedScore,
         reason: pacedReason,
@@ -110,14 +110,14 @@ export class MYTraitPolicy {
     } else if (activityId === 'rest') {
       const sleepScore = Math.max(0, 80 - health);
       candidates.push({
-        modeId: 'sleep_focus',
+        modeId: 'sleep_rest',
         label: '수면 중심',
         score: sleepScore,
         reason: '체력 회복을 위해 잠을 푹 잤습니다.',
       });
 
       candidates.push({
-        modeId: 'mind_care',
+        modeId: 'mental_rest',
         label: '마음 정리',
         score: stress,
         reason: '스트레스 해소를 위해 마음을 정리하며 쉬었습니다.',

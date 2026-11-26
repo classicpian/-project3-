@@ -1,209 +1,281 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>컴공생 키우기 - 로직 테스트</title>
-  <style>
-    body { font-family: sans-serif; max-width: 780px; margin: 24px auto; padding: 0 16px; background: #f4f6f9; color: #222; }
-    .box { background: #fff; padding: 16px; border-radius: 8px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    button { padding: 8px 12px; margin: 4px; cursor: pointer; border: 1px solid #334155; background: #1e293b; color: #fff; border-radius: 6px; font-size: 13px; }
-    button:hover { background: #334155; }
-    select { padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; }
-    .log { font-size: 14px; line-height: 1.6; max-height: 220px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 6px; }
-    .advice { color: #0f766e; font-size: 14px; }
-    .item-desc { margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 6px; font-size: 12.5px; line-height: 1.6; color: #334155; }
-    #examBox { display: none; border: 2px solid #dc2626; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>컴공생 키우기</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="main.js"></script>
 </head>
+
 <body>
-  <h2>🎓 컴공생 키우기 (로직 & Worker 통합 테스트)</h2>
+  <!-- [1주차] 초기 화면 -->
+  <section id="title-screen" class="screen centered-screen">
+    <div class="title-content">
+      <span class="title-tag">CAMPUS LIFE SIMULATION</span>
+      <h1>컴공생<br><span>키우기</span></h1>
+      <div class="title-rule" aria-hidden="true"></div>
+      <div class="title-actions">
+        <button id="title-new-button" class="primary-button">새 게임 <span aria-hidden="true">▶</span></button>
+        <button id="title-continue-button">이어하기 <span aria-hidden="true">↗</span></button>
+        <button id="title-settings-button">설정 <span aria-hidden="true">⚙</span></button>
+      </div>
+      <p class="title-save-note" id="title-save-note"></p>
+    </div>
+  </section>
 
-  <div class="box">
-    <select id="genderSelect">
-      <option value="male">남자</option>
-      <option value="female">여자</option>
-    </select>
-    <button id="btnNew">새 게임 시작</button>
-    <button id="btnLoad">이어하기</button>
+  <!-- [1주차] 시작 메뉴 -->
+  <section id="menu-screen" class="screen centered-screen" hidden>
+    <div class="menu-panel panel">
+      <h2>컴공생 키우기</h2>
+
+      <button id="new-game-button" class="primary-button">
+        새 게임
+      </button>
+      <button id="continue-button" disabled>이어하기</button>
+      <button id="back-button">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- [1주차] 이름 입력 화면 -->
+  <section id="name-screen" class="screen centered-screen" hidden>
+    <form id="name-form" class="menu-panel panel" novalidate>
+      
+      <div class="student-id-card">
+        <header class="student-id-header"><div class="id-school-logo"><img src="assets/kit-logo-pixel.png" alt="kit 로고"></div><span>STUDENT ID</span></header>
+        <div class="student-id-body">
+          <div class="id-photo" role="img" aria-label="26학번 주인공 사진"></div>
+          <div class="id-information">
+            <h2>학생증</h2>
+            <label class="id-name-row" for="player-name"><span>이름</span><input id="player-name" name="playerName" type="text" placeholder="이름을 입력하세요" maxlength="10" autocomplete="off" aria-describedby="name-help name-error"></label>
+            <p><span>학과</span><strong>컴퓨터공학과</strong></p>
+            <p><span>학번</span><strong>2026학번</strong></p>
+            <p><span>학적</span><strong>재학생</strong></p>
+          </div>
+        </div>
+        <footer class="student-id-footer"><span></span><span class="id-barcode" aria-hidden="true"></span></footer>
+      </div>
+      <p id="name-help" class="help-text">학생증의 이름 칸에 한글·영문·숫자 1~10자를 입력하세요.</p>
+      <p id="name-error" class="error-text" role="alert"></p>
+      <div class="id-actions"><button id="name-back-button" type="button">돌아가기</button><button type="submit" class="primary-button">이 이름으로 시작 <span aria-hidden="true">▶</span></button></div>
+    </form>
+  </section>
+
+  <!-- [1주차] 기본 화면 -->
+  <div class="game-viewport">
+<section id="game-screen" class="screen" hidden>
+    <!-- [2주차] 게임 날짜·날씨에 연결된 방과 캐릭터 -->
+    <canvas id="home-scene" width="1672" height="941" aria-label="계절과 날씨가 변하는 자취방"></canvas>
+    <header class="game-header">
+      <h1>컴공생 키우기</h1>
+      <button id="menu-button">메뉴</button>
+    </header>
+
+    <main class="game-layout">
+      <aside class="left-panel">
+        <section class="panel date-panel">
+          <h2 id="semester-text">1학년 1학기</h2>
+          <p id="month-text" class="month">3월</p>
+          <p id="week-text" class="week">1주차</p><p id="environment-label" role="status"></p>
+        </section>
+
+        <section class="panel" id="calendar-panel" role="button" tabindex="0" aria-label="연간 학사 달력 열기" aria-haspopup="dialog">
+          <h2 id="calendar-heading">이번 달</h2><div id="calendar" class="calendar"></div><div id="calendar-rent-note" class="home-rent-note"></div></section>
+      </aside>
+
+      <section class="room-panel panel" aria-label="캐릭터의 방">
+
+        <div class="dialogue-box">
+          <!-- [2주차] 입력한 이름 표시 -->
+          <strong id="dialogue-name"></strong>
+          <p id="dialogue-text">
+            대학 생활 첫 주! 이번 주에는 무엇을 해볼까?
+          </p>
+        </div>
+      </section>
+
+      <aside class="right-panel stats-tiles">
+        <section class="panel">
+          <h2>
+            <span id="profile-name"></span>
+            <span>· <span id="profile-age">20</span>세</span>
+          </h2>
+
+          <div class="stat">
+            <label class="stat-label" for="health-gauge"><img src="assets/icon-health.png" alt="">체력</label><small id="health-status" class="stat-status"></small>
+            <span id="health-text"></span>
+            <progress id="health-gauge" max="100"></progress><div id="health-segments" class="segments health" aria-hidden="true"></div>
+          </div>
+
+          <div class="stat">
+            <span class="stat-label"><img src="assets/icon-intelligence.png" alt="">지능</span><small id="intelligence-status" class="stat-status"></small>
+            <span id="intelligence-text"></span>
+          </div>
+
+          <div class="stat">
+            <label class="stat-label" for="stress-gauge"><img src="assets/icon-stress.png" alt="">스트레스</label><small id="stress-status" class="stat-status"></small>
+            <span id="stress-text"></span>
+            <progress id="stress-gauge" max="100"></progress><div id="stress-segments" class="segments stress" aria-hidden="true"></div>
+          </div>
+
+          <div class="stat">
+            <span class="stat-label"><img src="assets/icon-money.png" alt="">소지금</span><small id="money-status" class="stat-status"></small>
+            <span id="money-text"></span>
+          </div>
+        </section>
+
+        <nav class="game-menu" aria-label="게임 메뉴">
+          <button id="schedule-button" class="primary-button">
+            일정 짜기
+          </button>
+          <button id="events-button">주요 일정</button>
+          <button id="records-button">성장 기록</button>
+          <button id="shop-button">상점</button>
+        </nav>
+
+        <p id="game-message" class="help-text" role="status"></p>
+      </aside>
+    </main>
+  </section>
   </div>
+<!-- [2주차] 주간 활동 선택 창 -->
+<dialog id="schedule-dialog" aria-labelledby="schedule-title">
+  <div class="dialog-content">
+    <header class="dialog-header">
+      <h2 id="schedule-title">이번 달 계획</h2>
+      <button id="close-schedule-button" type="button">
+        닫기
+      </button>
+    </header>
 
-  <div class="box">
-    <strong>📅 상태:</strong> <span id="statusText">게임을 시작해 주세요.</span>
-    <div id="adviceBox" class="advice" style="margin-top:8px;"></div>
+    <p id="schedule-date"></p>
+    <p>주차를 누른 뒤 활동을 골라주세요. 실행은 한 주씩 진행합니다.</p><div id="month-plan-weeks"></div>
+
+    <div id="activity-buttons" class="activity-grid">
+      <button type="button" data-activity="study" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">📖</span>
+        공부
+      </button>
+
+      <button type="button" data-activity="work" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">💰</span>
+        아르바이트
+      </button>
+
+      <button type="button" data-activity="leisure" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">🎮</span>
+        여가
+      </button>
+
+      <button type="button" data-activity="rest" aria-pressed="false">
+        <span class="activity-icon" aria-hidden="true">🛏️</span>
+        휴식
+      </button>
+    </div>
+
+    <div class="activity-description">
+      <strong id="selected-activity-name">선택한 활동 없음</strong>
+      <div id="selected-activity-description" role="group" aria-label="활동 기본 효과">
+        활동을 누르면 설명이 표시됩니다.
+      </div>
+    </div>
+
+    <p id="schedule-error" class="error-text" role="alert"></p>
+
+    <button id="save-plan-button" type="button" disabled>계획 저장</button><button id="run-week-button" class="primary-button" disabled>
+      이번 주 시작
+    </button>
   </div>
+</dialog>
 
-  <div class="box">
-    <strong>📌 주간 활동:</strong><br />
-    <button data-act="study" title="체력 -10 / 지능 +20 / 스트레스 +10">공부</button>
-    <button data-act="partTime" title="체력 -10 / 소지금 +60만 / 스트레스 +10">알바 (+60만)</button>
-    <button data-act="leisure" title="체력 +40 / 소지금 -10만 / 스트레스 -40">여가 (-10만)</button>
-    <button data-act="rest" title="체력 +30 / 스트레스 -20">휴식</button>
+<!-- [2주차] 주간 결과 창 -->
+
+<!-- [2주차] 승인 목업의 주간 결과 창 -->
+<dialog id="result-dialog" aria-labelledby="result-title">
+ <div class="dialog-content result-stage">
+  <div class="result-main">
+   <div class="result-left">
+    <h2 id="result-title">이번 주 결과</h2>
+    <p id="result-summary"></p>
+    <div class="result-hero">
+     <div id="result-picture" role="img"></div>
+     <h3 id="result-activity"></h3>
+     <p id="result-caption" hidden></p>
+    </div>
+   </div>
+   <div class="result-right">
+    <div id="result-cards"></div>
+    <div class="money-summary">
+     <span class="money-label"><img src="assets/icon-money.png" alt="">소지금</span>
+     <strong id="result-money-balance"></strong>
+     <span id="result-money-change"></span>
+     <small id="result-money-total" hidden></small>
+    </div>
+    <section class="result-plan" aria-labelledby="result-plan-title">
+     <h3 id="result-plan-title">이번 달 계획</h3>
+     <div id="result-month-timeline"></div>
+    </section>
+   </div>
   </div>
-
-  <div class="box">
-    <strong>⚡ 특수 이벤트 테스트:</strong><br />
-    <button id="btnMilitary">군대 입대 (남자 1회)</button>
-    <button id="btnComp">대회/해커톤 참가</button>
+  <footer class="result-footer">
+   <div><p id="save-message" role="status"></p><details class="weekly-log-details" open><summary>이번 주 처리 내역</summary><div id="weekly-details" class="weekly-details"></div></details></div>
+   <button id="next-week-button" class="primary-button">다음 주 계획 확인</button>
+  </footer>
+ </div>
+</dialog>
+<!-- [2주차] 입학 장면. -->
+<dialog id="spoon-dialog" aria-labelledby="spoon-heading">
+ <div class="spoon-panel">
+  <h2 id="spoon-heading">나의 수저는?</h2>
+  <div class="spoon-draw-layout">
+   <div class="spoon-machine"><div class="slot-lights" aria-hidden="true"></div><div class="slot-windows" aria-hidden="true"><div class="slot-window"><div class="spoon-reel"></div></div></div><div class="slot-marker" aria-hidden="true">▶</div></div>
+   <aside class="spoon-odds" aria-label="수저 배정 확률"><h3>배정 확률</h3><div><span class="odds-spoon odds-diamond" aria-hidden="true"></span><span>다이아</span><strong>5%</strong></div><div><span class="odds-spoon odds-gold" aria-hidden="true"></span><span>금</span><strong>15%</strong></div><div><span class="odds-spoon odds-silver" aria-hidden="true"></span><span>은</span><strong>35%</strong></div><div><span class="odds-spoon odds-dirt" aria-hidden="true"></span><span>흙</span><strong>45%</strong></div></aside>
   </div>
-
-  <div class="box">
-    <strong>🛒 상점 테스트:</strong><br />
-    <button data-buy="energy_drink" title="사용 시 체력 +15, 스트레스 +10 (주 2회)">에너지 드링크 구매 (5천)</button>
-    <button data-use="energy_drink" title="체력 +15, 스트레스 +10">에너지 드링크 사용</button>
-    <button data-buy="iseul_cham" title="사용 시 체력 -25, 스트레스 -30 (주 1회)">이슬(참) 구매 (3만)</button>
-    <button data-use="iseul_cham" title="체력 -25, 스트레스 -30">이슬(참) 사용</button>
-    <button data-buy="gpt_plus" title="4주간 월간 과제 100% 자동 성공">GPT Plus (3만)</button>
-    <button data-buy="jokbo" title="다음 전공 시험 요구 지능 10 감소 (1회성)">족보 구매 (5만)</button>
-    <br />
-    <button data-buy="gemini_sub" title="영구: 공부 시 지능 획득량 +20%">제미나이 영구 (30만)</button>
-    <button data-buy="living_set" title="영구: 휴식 시 체력 회복량 +20%">자취 세트 (30만)</button>
-    <button data-buy="herman_miller" title="영구: 모든 활동 체력 소모량 -20%">허먼밀러 의자 (50만)</button>
-    <button data-buy="new_pc" title="영구: 공부 시 지능 +30%, 스트레스 -15%">최신형 컴퓨터 (120만)</button>
-    <br />
-    <button data-buy="cert_ticket" title="방학 전용: 다음 주 자격증 합격 판정 (지능 / (다음 시험 요구 지능 + 50))">자격증 접수권 (5만 / 방학 전용)</button>
-    <button data-buy="toeic_ticket" title="방학 전용: 방학 마지막 주 토익 시험 응시">토익 응시권 (5만 / 방학 전용)</button>
-
-    <div class="item-desc">
-      <strong>📖 아이템 효과 안내</strong><br />
-      • <strong>에너지 드링크 (5천):</strong> 사용 시 체력 +15, 스트레스 +10 (주당 2회 제한)<br />
-      • <strong>이슬(참) (3만):</strong> 사용 시 체력 -25, 스트레스 -30 (주당 1회 제한)<br />
-      • <strong>GPT Plus (3만):</strong> 구매 후 4주간 매달 4주차 과제 100% 성공 (+25점)<br />
-      • <strong>족보 (5만):</strong> 다음 전공 시험(중간·기말) 요구 지능 -10 감소 (1회 소모)<br />
-      • <strong>제미나이 영구 구독 (30만):</strong> 영구 패시브 — 공부 시 지능 획득량 +20%<br />
-      • <strong>자취 세트 (30만):</strong> 영구 패시브 — 휴식 시 체력 회복량 +20%<br />
-      • <strong>허먼밀러 의자 (50만):</strong> 영구 패시브 — 모든 활동의 체력 소모량 -20%<br />
-      • <strong>최신형 컴퓨터 (120만):</strong> 영구 패시브 — 공부 시 지능 +30%, 스트레스 -15%<br />
-      • <strong>자격증 접수권 (5만):</strong> 방학 전용 — 다음 주 합격 판정 (성공 시 취업 스펙 +1)<br />
-      • <strong>토익 응시권 (5만):</strong> 방학 전용 — 방학 마지막 주(8월·2월 4주) 토익 시험 응시
+  <span id="spoon-result-status" class="sr-only" role="status"></span>
+  <h3 id="spoon-result-name"></h3>
+  <div class="spoon-support"><div><span>학비</span><strong id="spoon-tuition"></strong></div><div><span>월세</span><strong id="spoon-rent"></strong></div></div>
+  <p id="spoon-save-note" role="status" hidden></p>
+  <button id="spoon-start" type="button">수저 뽑기 <span aria-hidden="true">▼</span></button>
+  <button id="spoon-confirm" class="primary-button" type="button" hidden>확인하고 입학하기 <span aria-hidden="true">▶</span></button>
+ </div>
+</dialog>
+<dialog id="entrance-dialog" aria-label="대학 입학 장면">
+    <canvas id="entrance-canvas" width="1672" height="941" role="img" aria-label="교문과 청록색 과잠을 입은 26학번 주인공의 입학 장면"></canvas>
+  <button id="entrance-skip">건너뛰기</button>
+  <div class="entrance-dialogue">
+    <strong id="entrance-name"></strong>
+    <p id="entrance-caption"></p>
+  </div>
+</dialog><!-- [2주차] 활동 실행 연출 -->
+<dialog id="activity-run-dialog" aria-labelledby="activity-run-title">
+  <div class="dialog-content">
+    <h2 id="activity-run-title"></h2>
+    <canvas id="activity-canvas" width="240" height="140" aria-label="선택한 활동을 수행하는 도트 캐릭터"></canvas>
+    <label for="activity-progress">이번 주 진행</label>
+    <progress id="activity-progress" max="100" value="0"></progress>
+    <div class="activity-controls">
+      <button id="activity-speed" aria-pressed="false">배속 ×1</button>
+      <button id="activity-skip">연출 건너뛰기</button>
     </div>
   </div>
-
-  <div class="box" id="examBox">
-    <h3 id="examTitle">시험</h3>
-    <div id="examQuestions"></div>
-    <button id="btnSubmitExam">답안 제출</button>
-  </div>
-
-  <div class="box">
-    <strong>📝 실행 로그:</strong>
-    <div id="logBox" class="log"></div>
-  </div>
-
-  <script type="module">
-    import { MYGameController } from './src/logic/MYGameController.js';
-
-    const statusText = document.getElementById('statusText');
-    const adviceBox = document.getElementById('adviceBox');
-    const logBox = document.getElementById('logBox');
-    const examBox = document.getElementById('examBox');
-    const examTitle = document.getElementById('examTitle');
-    const examQuestions = document.getElementById('examQuestions');
-    const btnComp = document.getElementById('btnComp');
-
-    function addLog(text) {
-      const p = document.createElement('div');
-      p.textContent = text;
-      logBox.prepend(p);
-    }
-
-    function renderState(state, date) {
-      if (!state || !state.player) return;
-      const p = state.player;
-      const d = date ? `${date.academicYear}학년 ${date.month}월 ${date.weekInMonth}주 (${date.semesterId})` : '';
-      const awardCount = state.awards ? state.awards.length : 0;
-      const jokboTag = state.activeEffects?.jokboActive ? ' (족보 적용)' : '';
-      const thresholdText = state.examThreshold !== undefined ? ` / 시험 요구: ${state.examThreshold}${jokboTag}` : '';
-      statusText.textContent = `${d} | 체력: ${p.health}/${p.maxHealth} | 지능: ${p.intelligence}${thresholdText} | 스트레스: ${p.stress} | 소지금: ${p.money.toLocaleString()}원 | 토익: ${p.toeicScore || 0}점 | 수상/자격증: ${awardCount}개`;
-
-      if (state.hackathonThreshold === null) {
-        btnComp.textContent = '대회/해커톤 참가 (방학 불가)';
-      } else if (state.hackathonThreshold !== undefined) {
-        btnComp.textContent = `대회/해커톤 참가 (요구 지능 ${state.hackathonThreshold})`;
-      }
-    }
-
-    const controller = new MYGameController({
-      onState: (msg) => {
-        renderState(msg.state, msg.date);
-        if (msg.result?.message) {
-          addLog(msg.result.message);
-        } else if (msg.result?.item) {
-          addLog(`아이템 처리 완료: ${msg.result.item.name}`);
-        } else {
-          addLog('상태가 갱신되었습니다.');
-        }
-      },
-      onWaitExam: (msg) => {
-        examBox.style.display = 'block';
-        const examLabel =
-          msg.exam.examType === 'toeic'
-            ? '방학 토익 시험'
-            : `${msg.exam.semesterId} ${msg.exam.examType === 'mid' ? '중간고사' : '기말고사'}`;
-        examTitle.textContent = `${examLabel} (난이도: ${msg.exam.difficulty}, 요구 지능: ${msg.exam.threshold})`;
-        examQuestions.innerHTML = msg.exam.questions.map((q, idx) => `
-          <div style="margin-bottom:10px;">
-            <div><strong>Q${idx + 1}. ${q.prompt}</strong></div>
-            ${q.options.map((opt, oIdx) => `
-              <label style="margin-right:10px;">
-                <input type="radio" name="q_${idx}" value="${oIdx}" /> ${opt}
-              </label>
-            `).join('')}
-          </div>
-        `).join('');
-        msg.logs.forEach(addLog);
-      },
-      onWeekDone: (msg) => {
-        examBox.style.display = 'none';
-        renderState(msg.state, msg.date);
-        if (msg.result?.logs) msg.result.logs.forEach(addLog);
-        if (msg.ended) {
-          addLog('🏁 게임 종료! 엔딩: ' + msg.endings.map(e => e.title).join(', '));
-        }
-      },
-      onAdvice: (tips) => {
-        adviceBox.innerHTML = tips.join('<br />');
-      },
-      onError: (reason) => {
-        addLog('❌ 오류: ' + reason);
-      },
-    });
-
-    document.getElementById('btnNew').onclick = () => {
-      const gender = document.getElementById('genderSelect').value;
-      logBox.innerHTML = '';
-      examBox.style.display = 'none';
-      controller.MYStartGame(gender);
-    };
-
-    document.getElementById('btnLoad').onclick = () => controller.MYLoadGame();
-
-    document.querySelectorAll('[data-act]').forEach((btn) => {
-      btn.onclick = () => controller.MYSendCommand('RUN_WEEK', { activityId: btn.dataset.act });
-    });
-
-    document.querySelectorAll('[data-buy]').forEach((btn) => {
-      btn.onclick = () => controller.MYSendCommand('BUY', { itemId: btn.dataset.buy });
-    });
-
-    document.querySelectorAll('[data-use]').forEach((btn) => {
-      btn.onclick = () => controller.MYSendCommand('USE_ITEM', { itemId: btn.dataset.use });
-    });
-
-    document.getElementById('btnMilitary').onclick = () => {
-      controller.MYSendCommand('MILITARY');
-    };
-
-    btnComp.onclick = () => {
-      controller.MYSendCommand('COMPETITION', { compId: 'HACKATHON' });
-    };
-
-    document.getElementById('btnSubmitExam').onclick = () => {
-      const answers = [0, 1, 2, 3].map((idx) => {
-        const checked = document.querySelector(`input[name="q_${idx}"]:checked`);
-        return checked ? Number(checked.value) : -1;
-      });
-      controller.MYSendCommand('SUBMIT_EXAM', { answers });
-    };
-  </script>
+</dialog><dialog id="settings-dialog" aria-labelledby="settings-heading">
+<form method="dialog" class="settings-panel">
+<h2 id="settings-heading">설정</h2>
+<label for="setting-speed">활동 애니메이션 속도</label>
+<select id="setting-speed"><option value="1">기본 속도</option><option value="3">빠르게</option></select>
+<label class="motion-option"><input id="setting-motion" type="checkbox"> 움직임 줄이기</label>
+<p>배경·캐릭터의 반복 움직임을 줄입니다.</p>
+<p id="settings-status" role="status">설정은 자동으로 저장됩니다.</p>
+<button value="close" class="primary-button">닫기</button>
+</form></dialog><dialog id="b-content-dialog" aria-labelledby="b-content-title"><div class="b-panel"><h2 id="b-content-title"></h2><div id="b-content-body"></div><button id="b-content-close">닫기</button></div></dialog>
+<dialog id="b-exam-dialog" aria-labelledby="b-exam-title"><form id="b-exam-form" class="b-panel"><h2 id="b-exam-title"></h2><p id="b-exam-description"></p><div id="b-exam-questions"></div><p id="b-exam-error" role="alert"></p><button class="primary-button" type="submit">답안 제출</button></form></dialog>
+<script>if(location.protocol==='file:'){document.addEventListener('DOMContentLoaded',function(){const p=document.createElement('p');p.textContent='B의 Web Worker 연결본입니다. 파일을 직접 열지 말고, 폴더의 게임실행.cmd 또는 VS Code Live Server로 실행하세요.';p.style.cssText='position:fixed;inset:0 0 auto;z-index:99999;padding:20px;background:#fff3cd;color:#382d14;margin:0;text-align:center';document.body.append(p);});}</script>
 </body>
 </html>
+
+
+
+
+
+

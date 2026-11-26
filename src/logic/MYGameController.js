@@ -23,7 +23,12 @@ export class MYGameController {
 
     this.gameWorker.onmessage = (e) => this.MYHandleReply(e.data);
     this.advisorWorker.onmessage = (e) => this.MYHandleAdvisorReply(e.data);
+    this.gameWorker.onerror=()=>this.MYHandleWorkerFailure();
+    this.gameWorker.onmessageerror=()=>this.MYHandleWorkerFailure();
+    this.advisorWorker.onerror=()=>{};
   }
+
+  MYHandleWorkerFailure(){this.isBusy=false;this.callbacks.onError?.('게임 계산을 연결하지 못했습니다. 게임실행.cmd 또는 Live Server로 다시 열어주세요.');}
 
   // 새 게임 시작
   MYStartGame(gender = 'male') {
@@ -80,14 +85,15 @@ export class MYGameController {
       return;
     }
 
-    if (msg.type === 'WAIT' && msg.kind === 'EXAM') {
+    if (msg.type === 'WAIT_EXAM' || (msg.type === 'WAIT' && msg.kind === 'EXAM')) {
       this.callbacks.onWaitExam?.(msg);
       return;
     }
 
     if (msg.type === 'WEEK_DONE') {
       // 주간 완료 시 자동 저장
-      const saveRes = this.saveRepo.MYSaveCheckpoint(msg.state);
+      // The UI adapter owns the complete checkpoint, including name, plan and environment.
+      const saveRes = this.callbacks.onWeekDone ? null : this.saveRepo.MYSaveCheckpoint(msg.state);
       this.callbacks.onWeekDone?.({ ...msg, saveRes });
       this.MYRequestAdvice(msg.state, msg.date);
     }

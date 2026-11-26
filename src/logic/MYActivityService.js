@@ -1,10 +1,10 @@
 // src/logic/MYActivityService.js
 
 export const MY_ACTIVITY_RULES = {
-  study: { health: -10, intelligence: 20, stress: 10, money: 0 },
-  partTime: { health: -10, intelligence: 0, stress: 10, money: 600000 },
-  leisure: { health: 40, intelligence: 0, stress: -40, money: -100000 },
-  rest: { health: 30, intelligence: 0, stress: -20, money: 0 },
+  study: { health: -15, intelligence: 20, stress: 15, money: 0 },
+  partTime: { health: -15, intelligence: 0, stress: 15, money: 600000 },
+  leisure: { health: 30, intelligence: 0, stress: -30, money: -100000 },
+  rest: { health: 20, intelligence: 0, stress: -15, money: 0 },
 };
 
 const MY_MODE_MULTIPLIERS = {
@@ -21,14 +21,13 @@ const MY_MODE_MULTIPLIERS = {
 };
 
 export class MYActivityService {
-  // 활동 결과 계산 (모드 배율, 스트레스 페널티, 영구 아이템 패시브 반영)
   MYEvaluateActivity(activityId, selectedMode, playerState, permanentItems = []) {
     const base = MY_ACTIVITY_RULES[activityId];
     if (!base) {
       throw new Error(`알 수 없는 활동입니다: ${activityId}`);
     }
 
-    const mult = MY_MODE_MULTIPLIERS[selectedMode.id] || {
+    const mult = MY_MODE_MULTIPLIERS[selectedMode.modeId] || {
       health: 1.0,
       intelligence: 1.0,
       stress: 1.0,
@@ -40,17 +39,8 @@ export class MYActivityService {
     let stress = base.stress * mult.stress;
     let money = base.money * mult.money;
 
-    // 스트레스 70 이상일 때 공부(지능)·알바(소지금) 획득량 20% 감소
-    if (playerState.stress >= 70) {
-      if (activityId === 'study' && intelligence > 0) {
-        intelligence *= 0.8;
-      }
-      if (activityId === 'partTime' && money > 0) {
-        money *= 0.8;
-      }
-    }
+    if(playerState.stress>=70){if(activityId==='study'&&intelligence>0)intelligence*=.8;if(activityId==='partTime'&&money>0)money*=.8;}
 
-    // 영구 아이템 패시브 적용
     if (permanentItems.includes('gemini_sub') && activityId === 'study') {
       intelligence *= 1.2;
     }
@@ -77,7 +67,6 @@ export class MYActivityService {
     };
   }
 
-  // 계산된 변화량을 플레이어에게 적용
   MYApplyResult(player, evalRes) {
     player.MYApplyDelta(evalRes.delta);
     return {

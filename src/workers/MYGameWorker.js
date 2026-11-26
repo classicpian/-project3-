@@ -1,15 +1,18 @@
 // src/workers/MYGameWorker.js
 
 import { MYGameEngine } from '../logic/MYGameEngine.js';
+import {MYValidateSave} from '../logic/MYSaveRepository.js';
 
 let engine = null;
 let revision = 0;
 
 // 저장된 스냅샷으로 엔진 상태 복원
 function MYRestoreEngineState(savedData) {
+  if(!MYValidateSave(savedData))throw new Error('저장 데이터가 올바르지 않습니다.');
   const { player, elapsedWeek } = savedData;
   engine = new MYGameEngine(player.gender || 'male');
 
+  engine.player.spoon = player.spoon || {id:'dirt',label:'흙수저',desc:'지원 없음 (이전 저장)'};
   engine.player.health = player.health;
   engine.player.maxHealth = player.maxHealth;
   engine.player.intelligence = player.intelligence;
@@ -20,6 +23,7 @@ function MYRestoreEngineState(savedData) {
   engine.player.isMilitaryDone = player.isMilitaryDone;
 
   engine.calendar.elapsedWeek = elapsedWeek;
+  engine.calendar.militaryLeave=savedData.militaryLeave||(player.isMilitaryDone?{week:Math.min(191,elapsedWeek),years:2,migrated:true}:null);
   engine.restrictedNextWeek = savedData.restrictedNextWeek || false;
   engine.currentMidScore = savedData.currentMidScore || 0;
   engine.shopService.inventory = savedData.inventory || {};
@@ -27,11 +31,19 @@ function MYRestoreEngineState(savedData) {
   engine.shopService.activeEffects = savedData.activeEffects || {
     gptPlusWeeksLeft: 0,
     jokboActive: false,
-    certPending: false,
+    pendingCertId: null,
     toeicPending: false,
   };
   engine.examService.academicRecords = savedData.academicRecords || [];
   engine.eventService.awards = savedData.awards || [];
+  engine.assignmentService.semesterScore = savedData.assignmentTotal ?? savedData.assignmentScore ?? 0;
+  engine.competitionRecords=savedData.competitionRecords||[];
+  engine.economyService.paidRentMonths = new Set(Array.isArray(savedData.paymentRecords?.rent)?savedData.paymentRecords.rent:Object.keys(savedData.paymentRecords?.rent||{}));
+  engine.economyService.paidTuitionSemesters = new Set(Array.isArray(savedData.paymentRecords?.tuition)?savedData.paymentRecords.tuition:Object.keys(savedData.paymentRecords?.tuition||{}));
+  engine.shopService.weeklyUseCount = savedData.weeklyUseCount || {};
+  engine.eventService.weeksWithoutLeisure = savedData.weeksWithoutLeisure || 0;
+  engine.eventService.eventHistory = savedData.eventHistory || [];
+  engine.endingCandidates = savedData.endingCandidates || null;
 }
 
 // 메인 스레드 메시지 처리
@@ -86,11 +98,20 @@ function MYHandleWorkerMessage(event) {
       return;
     }
 
+    if(engine.endingCandidates && ['BUY','USE_ITEM','MILITARY','COMPETITION'].includes(type)) {
+      self.postMessage({type:'ERROR',requestId,revision,reason:'이미 종료된 게임입니다.'});return;
+    }
+    if(type==='RUN_WEEK' && !['study','partTime','leisure','rest'].includes(payload.activityId)) {
+      self.postMessage({type:'ERROR',requestId,revision,reason:'올바른 활동을 선택해주세요.'});return;
+    }
+    if(type==='RUN_WEEK' && payload.activityId==='leisure' && !engine.restrictedNextWeek && engine.player.money<100000) {
+      self.postMessage({type:'ERROR',requestId,revision,reason:'여가 비용 100,000원이 부족합니다.'});return;
+    }
     if (type === 'BUY') {
       const date = engine.calendar.MYGetDate();
       const res = engine.shopService.MYBuyItem(engine.player, payload.itemId, {
         isVacation: date.isVacation,
-        hasCertification: engine.eventService.awards.includes('CERT'),
+        academicYear: date.academicYear, awards: engine.eventService.awards, hiddenUnlocked: Boolean(payload.hiddenUnlocked),
       });
       if (!res.ok) {
         self.postMessage({ type: 'ERROR', requestId, revision, reason: res.reason });
@@ -146,6 +167,7 @@ function MYHandleWorkerMessage(event) {
           revision,
           ended: true,
           endings: res.endings,
+          result:res,
           state: engine.MYExportState(),
         });
       } else if (res.status === 'ERROR') {
@@ -167,6 +189,9 @@ function MYHandleWorkerMessage(event) {
     if (type === 'SUBMIT_EXAM') {
       const res = engine.MYSubmitExam(payload.answers);
       revision += 1;
+      if(res.status==='WAIT_EXAM'){
+        self.postMessage({type:'WAIT',kind:'EXAM',requestId,revision,exam:res.exam,examResult:res.examResult,logs:res.logs});return;
+      }
       if (res.status === 'ERROR') {
         self.postMessage({ type: 'ERROR', requestId, revision, reason: res.reason });
         return;

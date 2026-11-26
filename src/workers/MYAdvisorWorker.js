@@ -5,6 +5,7 @@ class MYAdvisor {
   MYAnalyzeSnapshot(snapshot, date) {
     const tips = [];
     if (!snapshot || !snapshot.player) return tips;
+    if(snapshot.endingCandidates?.length)return ['대학 생활이 종료됐어요. 달성한 엔딩과 성장 기록을 확인해보세요.'];
 
     const { health, stress, money } = snapshot.player;
     const reqInt = snapshot.examThreshold !== undefined ? ` (요구 지능: ${snapshot.examThreshold})` : '';
@@ -22,14 +23,15 @@ class MYAdvisor {
     }
 
     // 3. 경제(월세) 경고
-    if (money < 600000) {
+    const rentSupported=['diamond','gold'].includes(snapshot.player.spoon?.id);
+    if (money < 600000&&!rentSupported) {
       tips.push('💸 소지금이 월세(600,000원)보다 부족합니다. 월말 전 아르바이트가 필요합니다.');
     }
 
     // 4. 일정 안내
     if (date && !date.isGraduated) {
       if (date.weekInMonth === 4) {
-        tips.push('📅 이번 주는 월말 정산(월세 600,000원 납부) 주차입니다.');
+        tips.push(rentSupported?'📅 이번 주는 월말입니다. 수저 혜택으로 월세가 지원됩니다.':'📅 이번 주는 월말 정산(월세 600,000원 납부) 주차입니다.');
       }
       if (
         date.isVacation &&

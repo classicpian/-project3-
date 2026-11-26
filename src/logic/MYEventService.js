@@ -75,19 +75,20 @@ export class MYEventService {
 
   // 대회/해커톤 결과 판정
   MYResolveCompetition(player, compId, requiredIntelligence) {
+    const parts=compId.split(':'),label=parts.length===3?`${parts[1]}학년 ${parts[2]}월 해커톤`:'해커톤';
     if (player.intelligence >= requiredIntelligence) {
       const prize = 1000000;
       player.MYApplyDelta({ money: prize, intelligence: 20, health: -15 });
       this.awards.push(compId);
       return {
         won: true,
-        message: `대회(${compId})에서 수상했습니다! (상금 100만 원, 지능 +20)`,
+        message: `${label}에서 수상했습니다! (상금 100만 원, 지능 +20, 체력 -15)`,
       };
     }
     player.MYApplyDelta({ health: -15, stress: 15 });
     return {
       won: false,
-      message: `대회(${compId})에서 아쉽게 탈락했습니다. (체력 -15, 스트레스 +15)`,
+      message: `${label}에서 아쉽게 탈락했습니다. (체력 -15, 스트레스 +15)`,
     };
   }
 }

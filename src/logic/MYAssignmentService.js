@@ -10,6 +10,7 @@ export class MYAssignmentService {
     this.semesterScore = 0;
   }
 
+
   // 월말(4주차) 과제 성공/실패 판정
   // prevThreshold가 0 이하(1학년 1학기 중간고사 전)이거나 GPT Plus 구독 중이면 100% 성공
   MYEvaluateMonthly(playerIntelligence, prevThreshold, hasGpt = false) {

@@ -1,79 +1,118 @@
 // src/logic/MYEconomyService.js
 
+export const MY_ECONOMY_RULES = {
+  monthlyRent: 600000,
+  baseTuition: 2000000,
+};
+
 export class MYEconomyService {
-  constructor(tuition = 2000000, monthlyRent = 600000) {
-    this.tuition = tuition;           // 기본 학기 학비
-    this.monthlyRent = monthlyRent;   // 고정 월세
-    this.paymentRecords = {
-      tuition: {}, // { '1-1': true, ... }
-      rent: {},    // { '1-3': true, ... } (학년-월)
+  constructor() {
+    this.paidRentMonths = new Set();
+    this.paidTuitionSemesters = new Set();
+  }
+
+  // 월세 납부 처리 (다이아·금수저는 전액 지원)
+  MYPayRent(player, yearMonthKey) {
+    if (this.paidRentMonths.has(yearMonthKey)) {
+      return {
+        isBankrupt: false,
+        alreadyPaid: true,
+        paidAmount: 0,
+        supportedBySpoon: false,
+      };
+    }
+
+    if (player.spoon?.id === 'diamond' || player.spoon?.id === 'gold') {
+      this.paidRentMonths.add(yearMonthKey);
+      return {
+        isBankrupt: false,
+        alreadyPaid: false,
+        paidAmount: 0,
+        supportedBySpoon: true,
+      };
+    }
+
+    const amount = MY_ECONOMY_RULES.monthlyRent;
+    if (player.money < amount) {
+      return {
+        isBankrupt: true,
+        alreadyPaid: false,
+        paidAmount: 0,
+        supportedBySpoon: false,
+        reason: `월세(${amount.toLocaleString()}원)를 납부할 소지금이 부족해 파산했습니다.`,
+      };
+    }
+
+    player.MYApplyDelta({ money: -amount });
+    this.paidRentMonths.add(yearMonthKey);
+
+    return {
+      isBankrupt: false,
+      alreadyPaid: false,
+      paidAmount: amount,
+      supportedBySpoon: false,
     };
   }
 
-  // 직전 학기 평점 기반 장학금 감면액 계산
-  MYCalculateScholarship(prevGpa, isFirstSemester) {
-    if (isFirstSemester || prevGpa === null) return 0;
-    if (prevGpa >= 4.3) return this.tuition;        // 전액 장학금
-    if (prevGpa >= 4.0) return this.tuition * 0.5;  // 반액 장학금
-    if (prevGpa >= 3.5) return this.tuition * 0.25; // 일부 감면
+  // 직전 학기 평점 기반 장학금 계산
+  MYCalculateScholarship(prevGpa) {
+    if (typeof prevGpa !== 'number') return 0;
+    const base = MY_ECONOMY_RULES.baseTuition;
+
+    if (prevGpa >= 4.2) return base;                  // 전액 장학금 (100%)
+    if (prevGpa >= 3.8) return Math.round(base * 0.5); // 반액 장학금 (50%)
+    if (prevGpa >= 3.5) return Math.round(base * 0.25); // 성적 우수 장학금 (25%)
     return 0;
   }
 
-  // 학기 초 학비 납부
+  // 학비 납부 처리 (다이아·은수저는 전액 지원)
   MYPayTuition(player, semesterId, prevGpa = null) {
-    if (this.paymentRecords.tuition[semesterId]) {
-      return { ok: true, alreadyPaid: true, paidAmount: 0, isBankrupt: false };
-    }
-
-    const isFirstSemester = semesterId === '1-1';
-    const scholarship = this.MYCalculateScholarship(prevGpa, isFirstSemester);
-    const finalTuition = Math.max(0, this.tuition - scholarship);
-
-    // 납부액과 잔액이 같으면 0원으로 정상 납부, 부족하면 파산
-    if (player.money < finalTuition) {
+    if (this.paidTuitionSemesters.has(semesterId)) {
       return {
-        ok: false,
-        isBankrupt: true,
-        reason: '학비 납부액 부족으로 파산했습니다.',
-        shortage: finalTuition - player.money,
+        isBankrupt: false,
+        alreadyPaid: true,
+        paidAmount: 0,
+        scholarship: 0,
+        supportedBySpoon: false,
       };
     }
 
-    player.MYApplyDelta({ money: -finalTuition });
-    this.paymentRecords.tuition[semesterId] = true;
+    if (player.spoon?.id === 'diamond' || player.spoon?.id === 'silver') {
+      this.paidTuitionSemesters.add(semesterId);
+      return {
+        isBankrupt: false,
+        alreadyPaid: false,
+        paidAmount: 0,
+        scholarship: 0,
+        supportedBySpoon: true,
+      };
+    }
+
+    const scholarship = this.MYCalculateScholarship(prevGpa);
+    const amount = Math.max(0, MY_ECONOMY_RULES.baseTuition - scholarship);
+
+    if (player.money < amount) {
+      return {
+        isBankrupt: true,
+        alreadyPaid: false,
+        paidAmount: 0,
+        scholarship,
+        supportedBySpoon: false,
+        reason: `[${semesterId}] 학비(${amount.toLocaleString()}원)를 납부할 소지금이 부족해 파산했습니다.`,
+      };
+    }
+
+    if (amount > 0) {
+      player.MYApplyDelta({ money: -amount });
+    }
+    this.paidTuitionSemesters.add(semesterId);
 
     return {
-      ok: true,
+      isBankrupt: false,
       alreadyPaid: false,
+      paidAmount: amount,
       scholarship,
-      paidAmount: finalTuition,
-      isBankrupt: false,
-    };
-  }
-
-  // 월말 월세 납부
-  MYPayRent(player, yearMonthKey) {
-    if (this.paymentRecords.rent[yearMonthKey]) {
-      return { ok: true, alreadyPaid: true, paidAmount: 0, isBankrupt: false };
-    }
-
-    if (player.money < this.monthlyRent) {
-      return {
-        ok: false,
-        isBankrupt: true,
-        reason: '월세 납부액 부족으로 파산했습니다.',
-        shortage: this.monthlyRent - player.money,
-      };
-    }
-
-    player.MYApplyDelta({ money: -this.monthlyRent });
-    this.paymentRecords.rent[yearMonthKey] = true;
-
-    return {
-      ok: true,
-      alreadyPaid: false,
-      paidAmount: this.monthlyRent,
-      isBankrupt: false,
+      supportedBySpoon: false,
     };
   }
 }
