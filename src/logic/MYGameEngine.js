@@ -30,6 +30,7 @@ export class MYGameEngine {
     this.currentMidScore = 0;
     this.endingCandidates = null;
     this.competitionRecords=[];
+    this.assignmentHistory=[];
   }
 
   MYGetNextExamInfo(date = this.calendar.MYGetDate()) {
@@ -264,7 +265,7 @@ export class MYGameEngine {
     } else {
       logs.push(`기말고사 완료: ${submitRes.score}점 (${submitRes.correctCount}/4 정답)`);
 
-      const assignRes = this.assignmentService.MYEvaluateMonthly(this.player.intelligence,this.MYGetPrevExamThreshold(date),this.shopService.activeEffects.gptPlusWeeksLeft>0);
+      const assignRes = this.MYEvaluateAssignment(date);
       logs.push(assignRes.message);
 
       const gradeRec = this.examService.MYCalculateSemesterGrade(
@@ -281,8 +282,15 @@ export class MYGameEngine {
     return {...(nextExam||this.MYCompleteWeek(activityResult, logs, date, schedule)),examResult:{...submitRes,semesterId:date.semesterId,difficulty:examData.difficulty,questions:examData.questions,answers:[...answers]}};
   }
 
+  MYEvaluateAssignment(date) {
+    const existing=this.assignmentHistory.find(r=>r.semesterId===date.semesterId&&r.month===date.month);
+    if(existing)return {...existing,message:'이번 달 과제 평가 완료'};
+    const result=this.assignmentService.MYEvaluateMonthly(this.player.intelligence,this.MYGetPrevExamThreshold(date),this.shopService.activeEffects.gptPlusWeeksLeft>0);
+    this.assignmentHistory.push({semesterId:date.semesterId,month:date.month,success:result.success,gained:result.gained,totalScore:result.totalScore});
+    return result;
+  }
   MYCompleteWeek(activityResult, logs, date, schedule) {
-    if(!date.isVacation&&date.weekInMonth===4&&!schedule.includes('FINAL_EXAM')){const assignment=this.assignmentService.MYEvaluateMonthly(this.player.intelligence,this.MYGetPrevExamThreshold(date),this.shopService.activeEffects.gptPlusWeeksLeft>0);logs.push(assignment.message);}
+    if(!date.isVacation&&date.weekInMonth===4&&!schedule.includes('FINAL_EXAM')){const assignment=this.MYEvaluateAssignment(date);logs.push(assignment.message);}
     const overwork = this.eventService.MYCheckOverwork(this.player);
     if (overwork.triggered) {
       this.restrictedNextWeek = true;
@@ -417,6 +425,8 @@ export class MYGameEngine {
       examThreshold: this.MYGetTargetExamThreshold(),
       hackathonThreshold: date.isVacation ? null : baseThreshold + 50,
       permanentPrices: this.shopService.MYGetPermanentPriceMap(date.academicYear),
+      assignmentThreshold: this.MYGetPrevExamThreshold(),
+      assignmentHistory: this.assignmentHistory,
       assignmentScore: this.assignmentService.MYGetSemesterScore(),
       restrictedNextWeek: this.restrictedNextWeek,
       currentMidScore: this.currentMidScore,

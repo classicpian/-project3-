@@ -52,3 +52,39 @@ export function MYBuildShop(body,state,items,onAction,hiddenUnlocked){
 }
 
 
+
+export function MYShopChanges(before,after,item,type){
+ const rows=[];
+ for(const [key,label,icon] of [['money','소지금','money'],['health','체력','health'],['intelligence','지능','intelligence'],['stress','스트레스','stress']]){
+  const from=Number(before.player[key]),to=Number(after.player[key]);
+  if(key==='money'||from!==to)rows.push({label,icon,from,to,delta:to-from,unit:key==='money'?'원':'',good:key==='stress'?to<=from:to>=from});
+ }
+ if(item?.type==='consumable') {const from=before.bState.inventory?.[item.id]||0,to=after.bState.inventory?.[item.id]||0;rows.push({label:'보유 수량',icon:'work',from,to,delta:to-from,unit:'개',good:to>=from});}
+ return rows;
+}
+
+export function MYShowShopReceipt(body,before,after,item,type,message){
+ const receipt=MYElement('section','shop-receipt shop-loot-result');receipt.setAttribute('role','status');receipt.setAttribute('aria-label',type==='BUY'?'구매 완료':'아이템 사용 완료');
+ const head=MYElement('div','loot-header');head.append(MYElement('span','loot-eyebrow',type==='BUY'?'PURCHASE COMPLETE':'ITEM USED'),MYElement('h3','',type==='BUY'?'구매 완료!':'아이템 사용!'));receipt.append(head);
+ const hero=MYElement('div','loot-hero');if(item)hero.append(MYProductArt(item.type==='cert_ticket'?'certificate':item.id,'loot-item'));hero.append(MYElement('strong','',item?.name.replace('👓 ','')||''));receipt.append(hero);
+ const rows=MYShopChanges(before,after,item,type).filter(r=>type==='BUY'||r.label!=='소지금');
+ if(type==='USE_ITEM')for(const key of Object.keys(item?.effect||{})){if(!rows.some(r=>r.icon===key)){const value=Number(after.player[key]);rows.unshift({label:{health:'체력',stress:'스트레스',intelligence:'지능'}[key],icon:key,from:value,to:value,delta:0,unit:'',good:true});}}
+ const grid=MYElement('div','loot-counters'),animations=[];
+ for(const [index,row] of rows.entries()){
+  const card=MYElement('div','loot-counter '+(row.delta===0?'neutral':row.good?'gain':'loss'));card.style.setProperty('--loot-delay',(index*160)+'ms');
+  const label=MYElement('div','loot-counter-label');label.append(row.label==='보유 수량'&&item?MYProductArt(item.id,''):MYIcon(row.icon),MYElement('strong','',row.label));card.append(label);
+  const number=MYElement('strong','loot-number',row.from.toLocaleString('ko-KR')+row.unit);card.append(number);
+  const delta=MYElement('span','loot-floating',(row.delta>0?'+':'')+row.delta.toLocaleString('ko-KR')+row.unit);card.append(delta);
+  let fill=null,max=100;if(['health','stress'].includes(row.icon)){max=row.icon==='health'?Number(after.player.maxHealth||after.bState.player.maxHealth||100):100;const meter=MYElement('div','loot-meter');fill=MYElement('span','');meter.append(fill);card.append(meter);}
+  animations.push({number,fill,row,max,delay:index*160});grid.append(card);
+ }
+ receipt.append(grid);
+ if(type==='BUY'&&item?.type==='consumable')receipt.append(MYElement('p','loot-note','보관함에 추가됐어요. 사용 버튼을 누르면 효과가 적용돼요.'));
+ else if(item?.type!=='consumable'){receipt.append(MYEffects(item));receipt.append(MYElement('p','loot-note',message));}
+ const button=MYElement('button','shop-receipt-dismiss','확인');button.type='button';receipt.append(button);body.prepend(receipt);receipt.scrollIntoView?.({block:'start',behavior:'smooth'});
+ let frame=null,finished=false;const start=performance.now(),reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||document.querySelector('#reduce-motion')?.checked;
+ function MYDraw(elapsed){for(const {number,fill,row,max,delay} of animations){const t=Math.min(1,Math.max(0,(elapsed-delay)/1000)),ease=1-Math.pow(1-t,3),value=Math.round(row.from+(row.to-row.from)*ease);number.textContent=value.toLocaleString('ko-KR')+row.unit;if(fill)fill.style.width=Math.max(0,Math.min(100,value/max*100))+'%';} }
+ function MYTick(now){if(!receipt.isConnected)return;MYDraw(now-start);if(now-start<1500)frame=requestAnimationFrame(MYTick);else{finished=true;receipt.classList.add('loot-settled');}}
+ button.onclick=()=>{if(!finished){if(frame)cancelAnimationFrame(frame);MYDraw(2000);finished=true;receipt.classList.add('loot-settled');}else receipt.remove();};
+ if(reduced){MYDraw(2000);finished=true;receipt.classList.add('loot-settled');}else{MYDraw(0);frame=requestAnimationFrame(MYTick);}
+}

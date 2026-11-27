@@ -15,11 +15,12 @@ export function MYValidateSave(data){
  if(p.spoon!==undefined&&(!MYObject(p.spoon)||!['diamond','gold','silver','dirt'].includes(p.spoon.id)))return false;
  for(const key of ['isBrokenUp','isMilitaryDone'])if(p[key]!==undefined&&typeof p[key]!=='boolean')return false;
  if(p.toeicScore!==undefined&&(!MYNonnegative(p.toeicScore)||p.toeicScore>990))return false;
- for(const key of ['awards','permanentItems','academicRecords','eventHistory','competitionRecords'])if(data[key]!==undefined&&!Array.isArray(data[key]))return false;
+ for(const key of ['awards','permanentItems','academicRecords','eventHistory','competitionRecords','assignmentHistory'])if(data[key]!==undefined&&!Array.isArray(data[key]))return false;
  const awardId=id=>typeof id==='string'&&(id==='HACKATHON'||/^HACKATHON:[1-4]:(5|11)$/.test(id)||id==='cert_security_bonus'||MY_SHOP_ITEMS[id]?.type==='cert_ticket');
  if(!(data.awards||[]).every(awardId)||!(data.permanentItems||[]).every(id=>MY_SHOP_ITEMS[id]?.type==='permanent'))return false;
  for(const key of ['inventory','weeklyUseCount'])if(data[key]!==undefined&&(!MYObject(data[key])||!Object.entries(data[key]).every(([id,count])=>MY_SHOP_ITEMS[id]?.type==='consumable'&&Number.isSafeInteger(count)&&count>=0)))return false;
  if(!(data.academicRecords||[]).every(r=>MYObject(r)&&/^[1-4]-[12]$/.test(r.semesterId)&&['midScore','finalScore','assignmentScore','weightedScore'].every(k=>MYNonnegative(r[k])&&r[k]<=100)&&MYNonnegative(r.gradePoint)&&r.gradePoint<=4.5&&typeof r.grade==='string'))return false;
+ if(!(data.assignmentHistory||[]).every(r=>MYObject(r)&&/^[1-4]-[12]$/.test(r.semesterId)&&[3,4,5,6,9,10,11,12].includes(r.month)&&typeof r.success==='boolean'&&r.gained===(r.success?25:0)&&MYNonnegative(r.totalScore)&&r.totalScore<=100))return false;
  if(!(data.eventHistory||[]).every(r=>MYObject(r)&&['OVERWORK','BREAKUP','MILITARY'].includes(r.type)))return false;
  if(!(data.competitionRecords||[]).every(r=>MYObject(r)&&/^HACKATHON:[1-4]:(5|11)$/.test(r.id)&&Number.isSafeInteger(r.week)&&r.week>=0&&r.week<192&&typeof r.won==='boolean'))return false;
  for(const key of ['assignmentTotal','assignmentScore'])if(data[key]!==undefined&&(!MYNonnegative(data[key])||data[key]>100))return false;

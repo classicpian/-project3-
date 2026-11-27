@@ -36,6 +36,7 @@ function MYRestoreEngineState(savedData) {
   };
   engine.examService.academicRecords = savedData.academicRecords || [];
   engine.eventService.awards = savedData.awards || [];
+  engine.assignmentHistory = savedData.assignmentHistory || [];
   engine.assignmentService.semesterScore = savedData.assignmentTotal ?? savedData.assignmentScore ?? 0;
   engine.competitionRecords=savedData.competitionRecords||[];
   engine.economyService.paidRentMonths = new Set(Array.isArray(savedData.paymentRecords?.rent)?savedData.paymentRecords.rent:Object.keys(savedData.paymentRecords?.rent||{}));

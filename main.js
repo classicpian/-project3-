@@ -1,4 +1,4 @@
-import { MYBuildShop } from './src/ui/MYShopView.js';
+import { MYBuildShop, MYShowShopReceipt } from './src/ui/MYShopView.js';
 import { MYBuildAnnualCalendar } from './src/ui/MYAnnualCalendar.js';
 import { MYPlayExamIntro } from './src/ui/MYExamIntro.js';
 import { MYPlaySemesterResult } from './src/ui/MYSemesterResult.js';
@@ -507,6 +507,10 @@ function MYRenderGame() {
   document.querySelector("#month-text").textContent = `${date.month}월`;
   document.querySelector("#week-text").textContent = `${date.week}주차`;
 
+  const assignmentScore=Number(state.bState?.assignmentScore)||0;
+  document.querySelector('#home-assignment-score').textContent=assignmentScore+' / 100';
+  document.querySelector('#home-assignment-gauge').value=assignmentScore;
+  document.querySelector('#home-assignment-status').textContent=state.ending?'대학 생활 종료':date.term==='방학'?'방학 · 과제 평가 없음':date.week===4?'이번 주 월말 평가':'월말 자동 평가';
   MYRenderCalendar();
   MYRenderStatTiles();
 }
@@ -527,11 +531,9 @@ async function MYRunWeek() {
 
   try {
     // 활동 식별값을 보내고 처리 결과를 받습니다.
-    await MYActivityView.MYPrepare(); // 상태 변경 전에 이미지 누락 확인
     const response = await game.MYRunWeek(selectedActivity);
     scheduleDialog.close();
     if(response.result.examResult)await MYPlayExamScore(response.result.examResult,state.player.name,MYReduceMotion());
-    await MYActivityView.MYPlay(response.result.actualActivityId || selectedActivity);
 
     state = response.state;
 
@@ -761,87 +763,7 @@ async function MYCompleteIntro(){
 }
 
 /* [2주차] 주간 활동 실행 장면. 결과 계산은 한 번만 호출합니다. */
-const MYActivityView = (() => {
-  const dialog = document.querySelector('#activity-run-dialog');
-  const canvas = document.querySelector('#activity-canvas');
-  let finish = null;
-  let fast = false;
 
-
-  let sheet = null;
-  function MYLoadSheet() {
-    if (sheet) return Promise.resolve(sheet);
-    return new Promise(function(resolve,reject){
-      const image = new Image();
-      image.onload = function(){sheet=image;resolve(image);};
-      image.onerror = function(){reject(new Error('assets/activity-frames.png를 불러오지 못했습니다.'));};
-      image.src = 'assets/activity-frames.png';
-      if(image.complete && image.naturalWidth){sheet=image;resolve(image);}
-    });
-  }
-  function MYDrawActivity(image, activityId, frame) {
-    const row = {study:0,work:1,leisure:2,rest:3}[activityId];
-    const cellWidth = image.naturalWidth / 2;
-    const cellHeight = image.naturalHeight / 4;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(image, (frame % 2)*cellWidth+1, row*cellHeight+1,
-      cellWidth-2, cellHeight-2, 0,0,canvas.width,canvas.height);
-  }
-  async function MYPlay(activityId) {
-    const image = await MYLoadSheet();
-    canvas.width = Math.round(image.naturalWidth / 2);
-    canvas.height = Math.round(image.naturalHeight / 4);
-
-    const names = {study:'공부',work:'아르바이트',leisure:'여가',rest:'휴식'};
-    document.querySelector('#activity-run-title').textContent = names[activityId] + '하는 한 주';
-    document.querySelector('#activity-speed').textContent = '배속 ×1';
-    document.querySelector('#activity-progress').value = 0;
-    document.querySelector('#activity-speed').setAttribute('aria-pressed','false');
-    fast = MYReadSettings().speed === 3;
-    document.querySelector('#activity-speed').textContent = fast ? '배속 ×3' : '배속 ×1';
-    document.querySelector('#activity-speed').setAttribute('aria-pressed',String(fast));
-    dialog.showModal();
-    let reduced = MYReduceMotion();
-    return new Promise(function (resolve) {
-      let lastTime = null;
-      let progress = 0;
-      let frameId = null;
-      let done = false;
-      function MYFinish() {
-        if (done) return;
-        done = true;
-        cancelAnimationFrame(frameId);
-        document.querySelector('#activity-progress').value = 100;
-        dialog.close();
-        finish = null;
-        resolve();
-      }
-      function MYFrame(now) {
-        const delta = lastTime === null ? 0 : Math.min(now-lastTime,100);
-        lastTime = now;
-        progress = Math.min(1,progress + delta/6000*(fast ? 3 : 1));
-        const frame = reduced ? 0 : Math.floor(now/800);
-        MYDrawActivity(image,activityId,frame);
-        document.querySelector('#activity-progress').value = progress*100;
-        if (progress === 1) MYFinish();
-        else frameId = requestAnimationFrame(MYFrame);
-      }
-      finish = MYFinish;
-      MYDrawActivity(image,activityId,0);
-      frameId = requestAnimationFrame(MYFrame);
-    });
-  }
-  document.querySelector('#activity-speed').addEventListener('click',function(){
-    fast = !fast;
-    document.querySelector('#activity-speed').textContent = fast ? '배속 ×3' : '배속 ×1';
-    document.querySelector('#activity-speed').setAttribute('aria-pressed',String(fast));
-  });
-  document.querySelector('#activity-skip').addEventListener('click',function(){if(finish)finish();});
-  dialog.addEventListener('cancel',function(event){event.preventDefault();if(finish)finish();});
-  return {MYPlay,MYPrepare:MYLoadSheet};
-})();
 
 /* [2주차] 실제 달력 표시. 한 달의 게임 턴은 기존과 같이 4개입니다. */
 function MYCalendarDate(completedWeeks,militaryLeave=state?.bState?.militaryLeave) {
@@ -1182,8 +1104,8 @@ document.querySelector('#setting-motion').addEventListener('change',MYSaveSettin
 // 게임 판단은 Worker에 요청하고 화면은 결과만 표시한다.
 function MYBParagraph(text) {const p=document.createElement('p');p.textContent=text;return p;}
 function MYBContent(title) {
- const dialog=document.querySelector('#b-content-dialog');dialog.classList.remove('shop-dialog','paper-calendar-dialog');dialog.querySelector('.shop-checkout')?.remove();document.querySelector('#b-content-title').textContent=title;
- const body=document.querySelector('#b-content-body');body.classList.remove('ending-content','ending-gallery','growth-records','schedule-board','annual-calendar');body.replaceChildren();
+ const dialog=document.querySelector('#b-content-dialog');dialog.classList.remove('shop-dialog','paper-calendar-dialog','assignment-guide-dialog');dialog.querySelector('.shop-checkout')?.remove();document.querySelector('#b-content-title').textContent=title;
+ const body=document.querySelector('#b-content-body');body.classList.remove('ending-content','ending-gallery','growth-records','schedule-board','annual-calendar','assignment-guide','assignment-history-body');body.replaceChildren();
  if(!dialog.open)dialog.showModal();return body;
 }
 function MYShowBAdvice(advice) {
@@ -1212,7 +1134,7 @@ function MYShowBEnding() {
 function MYHiddenUnlocked(){try{return localStorage.getItem('MY_GAME_CLEARED')==='true';}catch{return false;}}
 async function MYBAction(type,payload,refresh) {
  if(isRunning)return;isRunning=true;
- try {const response=await game.MYAction(type,{...payload,hiddenUnlocked:MYHiddenUnlocked()});state=response.state;MYRenderGame();if(type==='MILITARY')await MYPlayMilitaryEvent({type:'MILITARY',militaryLeave:state.bState?.militaryLeave},MYReduceMotion());isRunning=false;refresh?.();document.querySelector('#b-content-body').prepend(MYBParagraph(response.message));}
+ try {const before=game.MYGetState();const response=await game.MYAction(type,{...payload,hiddenUnlocked:MYHiddenUnlocked()});state=response.state;MYRenderGame();if(type==='MILITARY')await MYPlayMilitaryEvent({type:'MILITARY',militaryLeave:state.bState?.militaryLeave},MYReduceMotion());isRunning=false;refresh?.();if(['BUY','USE_ITEM'].includes(type))MYShowShopReceipt(document.querySelector('#b-content-body'),before,state,MY_SHOP_ITEMS[payload.itemId],type,response.message);else document.querySelector('#b-content-body').prepend(MYBParagraph(response.message));}
  catch(error){document.querySelector('#b-content-body').prepend(MYBParagraph(error.message));}
  finally{isRunning=false;}
 }
@@ -1286,3 +1208,34 @@ for(const [uiId,ruleId]of [['study','study'],['work','partTime'],['leisure','lei
 
 
 
+
+function MYShowAssignmentHistory(){
+ if(!state||isRunning)return;
+ const body=MYBContent('과제 기록');body.classList.add('assignment-history-body');const raw=state.bState,turn=Math.min(191,state.completedWeeks),year=Math.floor(turn/48)+1,month=((Math.floor(turn/4)+2)%12)+1;
+ const term=[3,4,5,6,7,8].includes(month)?1:2,semesterId=year+'-'+term,months=term===1?[3,4,5,6]:[9,10,11,12];
+ const summary=document.createElement('div');summary.className='assignment-history-summary';const title=document.createElement('span');title.className='assignment-term';title.textContent=year+'학년 '+term+'학기';const score=document.createElement('strong');score.textContent=(raw.assignmentScore||0);const unit=document.createElement('span');unit.className='assignment-total-unit';unit.textContent='/ 100점';const caption=document.createElement('span');caption.className='assignment-total-caption';caption.textContent='이번 학기 누적 점수';summary.append(title,caption,score,unit);body.append(summary);
+ for(const m of months){const rec=(raw.assignmentHistory||[]).find(r=>r.semesterId===semesterId&&r.month===m),monthIndex=(year-1)*12+(m-3+12)%12,past=turn>monthIndex*4+3;
+ const row=document.createElement('article');row.className='assignment-month '+(rec?(rec.success?'success':'failure'):'pending');
+ const img=document.createElement('img');img.src='assets/icon-study.png';img.alt='';const date=document.createElement('strong');date.textContent=m+'월';const task=document.createElement('span');task.className='assignment-task';task.textContent='월말 과제';const status=document.createElement('span');status.textContent=rec?(rec.success?'성공':'실패'):past?'기록 없음':'평가 예정';const score=document.createElement('b');score.textContent=rec?'+'+rec.gained+'점':'—';const name=document.createElement('div');name.className='assignment-month-name';name.append(date,task);status.className='assignment-stamp';score.className='assignment-points';row.append(img,name,status,score);body.append(row);}
+ const note=document.createElement('p');note.className='assignment-history-note';note.textContent='학기 중 월말에 자동 평가 · 성공 시 25점 · 학기 최대 100점';body.append(note);
+}
+document.querySelector('.home-assignment').addEventListener('click',MYShowAssignmentGuide);
+document.querySelector('.home-assignment').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();MYShowAssignmentGuide();}});
+
+function MYShowAssignmentGuide(){
+ if(!state||isRunning)return;
+ const body=MYBContent('과제 평가 안내');body.classList.add('assignment-guide');document.querySelector('#b-content-dialog').classList.add('assignment-guide-dialog');
+ const raw=state.bState,threshold=Number(raw.assignmentThreshold)||0,gpt=(raw.activeEffects?.gptPlusWeeksLeft||0)>0;
+ const rate=gpt||threshold<=0?100:Math.round(Math.max(0,Math.min(1,state.player.intelligence/threshold))*100);
+ function MYGuideNode(tag,cls,text){const el=document.createElement(tag);el.className=cls;if(text!==undefined)el.textContent=text;return el;}
+ const title=MYGuideNode('div','assignment-notice-title','과제 평가 안내');body.append(title);
+ const content=MYGuideNode('div','assignment-notice-content assignment-explain');
+ content.append(MYGuideNode('p','assignment-lead','매달 말, 과제를 자동 평가해요.'));
+ const outcomes=MYGuideNode('div','assignment-score-options');
+ for(const [mark,label,points,cls] of [['✓','성공하면','25','pass'],['×','실패하면','0','fail']]){const card=MYGuideNode('div','assignment-score-option '+cls);card.append(MYGuideNode('span','assignment-score-mark',mark),MYGuideNode('span','assignment-score-label',label));const score=MYGuideNode('div','assignment-score-number');score.append(MYGuideNode('strong','',points),MYGuideNode('span','','점'));card.append(score);outcomes.append(card);}content.append(outcomes);
+ content.append(MYGuideNode('p','assignment-score-limit','한 학기 4번 평가 · 총 100점'));
+ const chance=MYGuideNode('div','assignment-probability');const label=MYGuideNode('div','');label.append(MYGuideNode('strong','','지금 예상 성공률'),MYGuideNode('span','',gpt?'GPT Plus 사용 중':threshold<=0?'첫 시험 전에는 반드시 성공해요.':'지능 '+state.player.intelligence+' / 기준 '+threshold));chance.append(label,MYGuideNode('strong','probability-number',rate+'%'));content.append(chance);
+ content.append(MYGuideNode('p','assignment-simple-rule','지능이 높을수록 성공하기 쉬워요.'));
+ const details=MYGuideNode('details','assignment-formula-details');details.append(MYGuideNode('summary','','자세한 평가 기준'),MYGuideNode('p','','성공 확률 = 지능 ÷ 이전 시험 요구 지능 × 100 (최대 100%). 첫 시험 전 또는 GPT Plus 적용 중에는 100% 성공합니다. 월말 상태로 판정합니다.'));content.append(details);body.append(content);
+ const next=MYGuideNode('button','primary-button assignment-guide-next','확인하고 기록 보기' );next.type='button';next.addEventListener('click',MYShowAssignmentHistory);body.append(next);
+}
